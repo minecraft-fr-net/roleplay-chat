@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"id": "roleplay-chat",
+	"version": "${version}",
+	"name": "Roleplay chat",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/roleplay-chat/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.minecraftfr.roleplaychat.RoleplayChat"
+		],
+		"client": [
+			"net.minecraftfr.roleplaychat.RoleplayChatClient"
+		]
+	},
+	"mixins": [
+		"roleplay-chat.mixins.json",
+		{
+			"config": "roleplay-chat.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.16.5",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}

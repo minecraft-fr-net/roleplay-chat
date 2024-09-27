@@ -8,6 +8,6 @@ public class WhisperMessage {
   public static final String CHARACTER = "«";
 
   public static boolean canBeSend(String message) {
-		return message.startsWith(CHARACTER);
-	}
+    return message.startsWith(CHARACTER);
+  }
 }

@@ -7,15 +7,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RoleplayChat implements ModInitializer {
-	public static final String MOD_ID = "roleplay-chat";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+  public static final String MOD_ID = "roleplay-chat";
+  public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	private final ChatManager chatManager = new ChatManager();
+  private final ChatManager chatManager = new ChatManager();
 
-	@Override
-	public void onInitialize() {
-		ServerMessageEvents.CHAT_MESSAGE.register((message, sender, typeKey) -> {
+  @Override
+  public void onInitialize() {
+    ServerMessageEvents.CHAT_MESSAGE.register((message, sender, typeKey) -> {
       chatManager.handleChatMessage(sender, message.toString());
     });
-	}
+  }
 }

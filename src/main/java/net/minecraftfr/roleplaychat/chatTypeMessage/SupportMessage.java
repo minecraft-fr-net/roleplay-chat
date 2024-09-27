@@ -6,4 +6,8 @@ public class SupportMessage {
   public static final int RADIUS = 0;
   public static final Formatting COLOR = Formatting.LIGHT_PURPLE;
   public static final String CHARACTER = "?";
+
+  public static boolean canBeSend(String message) {
+    return message.startsWith(CHARACTER);
+  }
 }

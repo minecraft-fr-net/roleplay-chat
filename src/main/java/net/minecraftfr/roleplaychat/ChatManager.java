@@ -6,10 +6,10 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 
 public class ChatManager {
   public void handleChatMessage(ServerPlayerEntity player, String message) {
-		if (SpeakMessage.canBeSend(message)) {
+    if (SpeakMessage.canBeSend(message)) {
       this.sendLocalMessage(player, message, SpeakMessage.RADIUS, SpeakMessage.COLOR);
-		}
-	}
+    }
+  }
 
   /**
    * Send message to players within a certain radius in the specified color

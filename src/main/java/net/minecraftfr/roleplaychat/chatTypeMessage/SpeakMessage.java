@@ -8,10 +8,10 @@ public class SpeakMessage {
   public static final String CHARACTER = null;
 
   public static boolean canBeSend(String message) {
-		return (
+    return (
       !ShoutMessage.canBeSend(message) &&
       !WhisperMessage.canBeSend(message) &&
       !ActionMessage.canBeSend(message)
     );
-	}
+  }
 }

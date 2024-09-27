@@ -6,7 +6,7 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 
 public class ChatManager {
   public void handleChatMessage(ServerPlayerEntity player, String message) {
-		if (SpeakMessage.isSpeaking(message)) {
+		if (SpeakMessage.canBeSend(message)) {
       this.sendLocalMessage(player, message, SpeakMessage.RADIUS, SpeakMessage.COLOR);
 		}
 	}

@@ -7,11 +7,11 @@ public class SpeakMessage {
   public static final Formatting COLOR = Formatting.WHITE;
   public static final String CHARACTER = null;
 
-  public static boolean isSpeaking(String message) {
+  public static boolean canBeSend(String message) {
 		return (
-      !ShoutMessage.isShouting(message) &&
-      !WhisperMessage.isWhispering(message) &&
-      !ActionMessage.isDoingAnAction(message)
+      !ShoutMessage.canBeSend(message) &&
+      !WhisperMessage.canBeSend(message) &&
+      !ActionMessage.canBeSend(message)
     );
 	}
 }

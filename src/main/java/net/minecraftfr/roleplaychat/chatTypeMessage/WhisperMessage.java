@@ -7,7 +7,7 @@ public class WhisperMessage {
   public static final Formatting COLOR = Formatting.DARK_PURPLE;
   public static final String CHARACTER = "«";
 
-  public static boolean isWhispering(String message) {
+  public static boolean canBeSend(String message) {
 		return message.startsWith(CHARACTER);
 	}
 }

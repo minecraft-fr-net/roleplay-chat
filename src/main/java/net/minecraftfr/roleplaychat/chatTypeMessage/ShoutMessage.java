@@ -7,7 +7,7 @@ public class ShoutMessage {
   public static final Formatting COLOR = Formatting.RED;
   public static final String CHARACTER = "!";
 
-  public static boolean isShouting(String message) {
+  public static boolean canBeSend(String message) {
 		return message.startsWith(CHARACTER);
 	}
 }

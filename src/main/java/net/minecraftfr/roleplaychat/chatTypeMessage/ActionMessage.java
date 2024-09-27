@@ -7,7 +7,7 @@ public class ActionMessage {
   public static final Formatting COLOR = Formatting.GREEN;
   public static final String CHARACTER = "*";
 
-	public static boolean isDoingAnAction(String message) {
+	public static boolean canBeSend(String message) {
 		return message.startsWith(CHARACTER);
 	}
 }

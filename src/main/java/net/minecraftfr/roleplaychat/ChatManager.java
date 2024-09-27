@@ -13,11 +13,11 @@ public class ChatManager {
 
   /**
    * Send message to players within a certain radius in the specified color
+   * Send to all players if radius is 0
    */
   private void sendLocalMessage(ServerPlayerEntity player, String message, int radius, Formatting color) {
     player.getServerWorld().getPlayers().forEach(otherPlayer -> {
-      if (player.getPos().isInRange(otherPlayer.getPos(), radius)) {
-
+      if (radius == 0 || player.getPos().isInRange(otherPlayer.getPos(), radius)) {
         otherPlayer.sendMessage(
           Text.literal(player.getName().getString() + ": " + message).formatted(color),
           false

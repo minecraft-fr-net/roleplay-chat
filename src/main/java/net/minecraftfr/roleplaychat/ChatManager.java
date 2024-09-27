@@ -2,25 +2,24 @@ package net.minecraftfr.roleplaychat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 
 public class ChatManager {
+  public void handleChatMessage(ServerPlayerEntity player, String message) {
+		if (SpeakMessage.isSpeaking(message)) {
+      this.sendLocalMessage(player, message, SpeakMessage.RADIUS, SpeakMessage.COLOR);
+		}
+	}
 
-  // Constants for message ranges and formatting
-  public static final int SPEAK_RADIUS = 30;
-  public static final Formatting SPEAK_COLOR = Formatting.WHITE;
-
-  // Handle the "speak" message (no trigger character)
-  public void handleSpeakMessage(ServerPlayerEntity player, String message) {
-    sendLocalMessage(player, message);
-  }
-
-  // Send message to players within a certain radius
-  private void sendLocalMessage(ServerPlayerEntity player, String message) {
+  /**
+   * Send message to players within a certain radius in the specified color
+   */
+  private void sendLocalMessage(ServerPlayerEntity player, String message, int radius, Formatting color) {
     player.getServerWorld().getPlayers().forEach(otherPlayer -> {
-      if (player.getPos().isInRange(otherPlayer.getPos(), SPEAK_RADIUS)) {
-        // Send the message in the specified color
+      if (player.getPos().isInRange(otherPlayer.getPos(), radius)) {
+
         otherPlayer.sendMessage(
-          Text.literal(player.getName().getString() + ": " + message).formatted(SPEAK_COLOR),
+          Text.literal(player.getName().getString() + ": " + message).formatted(color),
           false
         );
       }

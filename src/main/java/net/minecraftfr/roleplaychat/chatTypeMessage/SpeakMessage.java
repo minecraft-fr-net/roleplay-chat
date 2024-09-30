@@ -1,5 +1,8 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
 public class SpeakMessage {
@@ -13,5 +16,14 @@ public class SpeakMessage {
       !WhisperMessage.canBeSend(message) &&
       !ActionMessage.canBeSend(message)
     );
+  }
+
+  public static MutableText formatMessage(ServerPlayerEntity player, String message) {
+    String contentMessage = formatContentMessage(player, message);
+    return Text.literal(contentMessage).formatted(COLOR);
+  }
+
+  public static String formatContentMessage(ServerPlayerEntity player, String message) {
+    return "<"+player.getName().getString() + "> " + message;
   }
 }

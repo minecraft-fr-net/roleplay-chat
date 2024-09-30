@@ -14,8 +14,8 @@ public class RoleplayChat implements ModInitializer {
 
   @Override
   public void onInitialize() {
-    ServerMessageEvents.CHAT_MESSAGE.register((message, sender, typeKey) -> {
-      chatManager.handleChatMessage(sender, message.toString());
+    ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, typeKey) -> {
+      return chatManager.handleChatMessage(sender, message.getContent().getString());
     });
   }
 }

@@ -12,21 +12,21 @@ This approach is designed to foster RP and local interactions between players.
 
 | **TYPE**  | **COLOR** | **RANGE**  | **TRIGGER CHARACTER** | **DESCRIPTION**                             |
 |-----------|-----------|------------|-----------------------|---------------------------------------------|
-| Whisper   | Violet    | 4 blocks   | `«`                   | Speak quietly to someone nearby             |
-| Action    | Green     | 25 blocks  | `*`                   | Describe an action you're performing (like `/me`) |
+| Whisper   | Violet (#C3C)   | 4 blocks   | `«`                   | Speak quietly to someone nearby             |
+| Action    | Green (#3C3)    | 25 blocks  | `*`                   | Describe an action you're performing (like `/me`) |
 | Speak     | White     | 30 blocks  | None                  | Normal conversation                         |
-| Shout     | Red       | 80 blocks  | `!`                   | Shout, for example, before attacking!       |
+| Shout     | Red (#C30)      | 80 blocks  | `!`                   | Shout, for example, before attacking!       |
 
 ## Additional Commands (Optional)
 These commands are for **Out of Character (OOC)** interactions. Use them sparingly! Thank you.
 
 | **TYPE**      | **COLOR** | **RANGE**  | **TRIGGER CHARACTER** | **DESCRIPTION**                                    |
 |---------------|-----------|------------|-----------------------|----------------------------------------------------|
-| Support       | Pink      | Unlimited  | `?`                   | Request help from staff (admins/helpers)            |
+| Support       | Pink (#F9C)     | Unlimited  | `?`                   | Request help from staff (admins/helpers)            |
 | Private Message (PM) | White  | Unlimited | `/m username message` | Send a private message to another player           |
 | Reply to PM   | White     | Unlimited  | `/r message`          | Reply to the last received private message          |
-| OOC Chat      | Gray      | 60 blocks  | `(`                   | Chat out of character on the server                 |
-| Global OOC    | Gray      | Unlimited  | `)`                   | Speak in a global OOC channel (requires activation) |
+| OOC Chat      | Gray (#AEC1D5)      | 60 blocks  | `(`                   | Chat out of character on the server                 |
+| Global OOC    | Gray (#AEC1D5)     | Unlimited  | `)`                   | Speak in a global OOC channel (requires activation) |
 
 ### Global OOC Chat
 To speak in the global OOC chat, you first need to activate it by using the `/global` command. **By default, it is activated**. You can deactivate it with the same command, `/global`.

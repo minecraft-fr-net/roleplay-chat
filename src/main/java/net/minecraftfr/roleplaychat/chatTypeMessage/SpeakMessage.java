@@ -5,25 +5,35 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
-public class SpeakMessage {
+public class SpeakMessage extends MessageType {
   public static final int RADIUS = 30;
   public static final Formatting COLOR = Formatting.WHITE;
   public static final String CHARACTER = null;
 
-  public static boolean canBeSend(String message) {
+  public SpeakMessage() {
+    super(RADIUS);
+  }
+
+  @Override
+  public boolean canBeSend(String message) {
+    ShoutMessage shoutMessage = new ShoutMessage();
+    WhisperMessage whisperMessage = new WhisperMessage();
+    ActionMessage actionMessage = new ActionMessage();
     return (
-      !ShoutMessage.canBeSend(message) &&
-      !WhisperMessage.canBeSend(message) &&
-      !ActionMessage.canBeSend(message)
+      !shoutMessage.canBeSend(message) &&
+      !whisperMessage.canBeSend(message) &&
+      !actionMessage.canBeSend(message)
     );
   }
 
-  public static MutableText formatMessage(ServerPlayerEntity player, String message) {
+  @Override
+  public MutableText formatMessage(ServerPlayerEntity player, String message) {
     String contentMessage = formatContentMessage(player, message);
     return Text.literal(contentMessage).formatted(COLOR);
   }
 
-  public static String formatContentMessage(ServerPlayerEntity player, String message) {
+  @Override
+  public String formatContentMessage(ServerPlayerEntity player, String message) {
     return "<"+player.getName().getString() + "> " + message;
   }
 }

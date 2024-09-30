@@ -8,7 +8,7 @@ import net.minecraft.text.TextColor;
 public class GlobalOOCMessage {
   public static final int RADIUS = 0;
   public static final int COLOR = 0xAEC1D5;
-  public static final String CHARACTER = ")";
+  public static final String CHARACTER = "[";
 
   public static boolean canBeSend(String message) {
     return message.startsWith(CHARACTER);

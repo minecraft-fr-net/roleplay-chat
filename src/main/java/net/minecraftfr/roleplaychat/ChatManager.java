@@ -3,6 +3,7 @@ package net.minecraftfr.roleplaychat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
+import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.OOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ShoutMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
@@ -24,6 +25,10 @@ public class ChatManager {
     }
     if (OOCMessage.canBeSend(message)) {
       this.sendLocalMessage(player, OOCMessage.formatMessage(player, message), OOCMessage.RADIUS);
+      return false;
+    }
+    if (GlobalOOCMessage.canBeSend(message)) {
+      this.sendLocalMessage(player, GlobalOOCMessage.formatMessage(player, message), GlobalOOCMessage.RADIUS);
       return false;
     }
     

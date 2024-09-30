@@ -26,7 +26,7 @@ These commands are for **Out of Character (OOC)** interactions. Use them sparing
 | Private Message (PM) | White  | Unlimited | `/m username message` | Send a private message to another player           |
 | Reply to PM   | White     | Unlimited  | `/r message`          | Reply to the last received private message          |
 | OOC Chat      | Gray (#AEC1D5)      | 60 blocks  | `(`                   | Chat out of character on the server                 |
-| Global OOC    | Gray (#AEC1D5)     | Unlimited  | `)`                   | Speak in a global OOC channel (requires activation) |
+| Global OOC    | Gray (#AEC1D5)     | Unlimited  | `[`                   | Speak in a global OOC channel (requires activation) |
 
 ### Global OOC Chat
 To speak in the global OOC chat, you first need to activate it by using the `/global` command. **By default, it is activated**. You can deactivate it with the same command, `/global`.

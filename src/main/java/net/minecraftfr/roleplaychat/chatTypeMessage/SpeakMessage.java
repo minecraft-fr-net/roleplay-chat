@@ -1,17 +1,14 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 public class SpeakMessage extends MessageType {
   public static final int RADIUS = 30;
-  public static final Formatting COLOR = Formatting.WHITE;
+  public static final int COLOR = 0xFFFFFF;
   public static final String CHARACTER = null;
 
   public SpeakMessage() {
-    super(RADIUS);
+    super(RADIUS, COLOR, CHARACTER);
   }
 
   @Override
@@ -24,12 +21,6 @@ public class SpeakMessage extends MessageType {
       !whisperMessage.canBeSend(message) &&
       !actionMessage.canBeSend(message)
     );
-  }
-
-  @Override
-  public MutableText formatMessage(ServerPlayerEntity player, String message) {
-    String contentMessage = formatContentMessage(player, message);
-    return Text.literal(contentMessage).formatted(COLOR);
   }
 
   @Override

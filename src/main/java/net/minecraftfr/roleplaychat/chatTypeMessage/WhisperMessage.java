@@ -27,6 +27,6 @@ public class WhisperMessage {
   }
 
   public static String formatContentMessage(ServerPlayerEntity player, String message) {
-    return "<"+player.getName().getString() + "> " + message;
+    return "<"+player.getName().getString() + "> " + message.substring(1).trim();
   }
 }

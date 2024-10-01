@@ -32,6 +32,10 @@ public abstract class MessageType {
   }
 
   public String formatContentMessage(ServerPlayerEntity player, String message) {
-    return "<"+player.getName().getString() + "> " + message.substring(1).trim();
+    return getChatName(player) + " " + message.substring(1).trim();
+  }
+
+  protected String getChatName(ServerPlayerEntity player) {
+    return "<" + player.getName().getString() + ">";
   }
 }

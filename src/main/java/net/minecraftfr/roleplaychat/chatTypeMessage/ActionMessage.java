@@ -13,6 +13,6 @@ public class ActionMessage extends MessageType {
 
   @Override
   public String formatContentMessage(ServerPlayerEntity player, String message) {
-    return "* "+player.getName().getString() + " " + message.substring(1).trim();
+    return "* " + player.getName().getString() + " " + message.substring(1).trim();
   }
 }

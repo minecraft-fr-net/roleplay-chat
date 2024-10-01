@@ -25,6 +25,6 @@ public class SpeakMessage extends MessageType {
 
   @Override
   public String formatContentMessage(ServerPlayerEntity player, String message) {
-    return "<"+player.getName().getString() + "> " + message;
+    return getChatName(player) + " " + message;
   }
 }

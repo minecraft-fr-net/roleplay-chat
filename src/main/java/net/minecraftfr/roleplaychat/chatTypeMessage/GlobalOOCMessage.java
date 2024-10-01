@@ -13,6 +13,6 @@ public class GlobalOOCMessage extends MessageType {
 
   @Override
   public String formatContentMessage(ServerPlayerEntity player, String message) {
-    return "<"+player.getName().getString() + "> [ " + message.substring(1).trim() + " ]";
+    return getChatName(player) + " [ " + message.substring(1).trim() + " ]";
   }
 }

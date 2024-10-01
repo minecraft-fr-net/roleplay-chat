@@ -5,7 +5,7 @@ public class ShoutMessage extends MessageType {
   public static final int COLOR = 0xCC3300;
   public static final String CHARACTER = "!";
 
-  public ShoutMessage() {
-    super(RADIUS, COLOR, CHARACTER);
+  public ShoutMessage(String message) {
+    super(message, RADIUS, COLOR, CHARACTER);
   }
 }

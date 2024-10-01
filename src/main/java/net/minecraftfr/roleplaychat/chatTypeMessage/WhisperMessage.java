@@ -5,12 +5,12 @@ public class WhisperMessage extends MessageType {
   public static final int COLOR = 0xCC33CC;
   public static final String[] CHARACTERS = {"«", "\""};
 
-  public WhisperMessage() {
-    super(RADIUS, COLOR, null);
+  public WhisperMessage(String message) {
+    super(message, RADIUS, COLOR, null);
   }
 
   @Override
-  public boolean canBeSend(String message) {
+  public boolean canBeSend() {
     for (String character : CHARACTERS) {
       if (message.startsWith(character)) {
         return true;

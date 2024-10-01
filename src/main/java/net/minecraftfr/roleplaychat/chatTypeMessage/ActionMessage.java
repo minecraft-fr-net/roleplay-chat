@@ -7,12 +7,12 @@ public class ActionMessage extends MessageType {
   public static final int COLOR = 0x33CC33;
   public static final String CHARACTER = "*";
 
-  public ActionMessage() {
-    super(RADIUS, COLOR, CHARACTER);
+  public ActionMessage(String message) {
+    super(message, RADIUS, COLOR, CHARACTER);
   }
 
   @Override
-  public String formatContentMessage(ServerPlayerEntity player, String message) {
+  public String formatContentMessage(ServerPlayerEntity player) {
     return "* " + player.getName().getString() + " " + message.substring(1).trim();
   }
 }

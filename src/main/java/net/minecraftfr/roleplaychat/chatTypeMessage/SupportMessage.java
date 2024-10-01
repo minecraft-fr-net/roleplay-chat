@@ -5,7 +5,7 @@ public class SupportMessage extends MessageType {
   public static final int COLOR = 0xFF99CC;
   public static final String CHARACTER = "?";
 
-  public SupportMessage() {
-    super(RADIUS, COLOR, CHARACTER);
+  public SupportMessage(String message) {
+    super(message, RADIUS, COLOR, CHARACTER);
   }
 }

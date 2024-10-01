@@ -6,11 +6,14 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 
 public abstract class MessageType {
+  protected String message;
   protected int radius;
   protected int color;
   protected String character;
+  protected Integer distance;
 
-  public MessageType(int radius, int color, String character) {
+  public MessageType(String message, int radius, int color, String character) {
+    this.message = message;
     this.radius = radius;
     this.color = color;
     this.character = character;
@@ -20,22 +23,70 @@ public abstract class MessageType {
     return radius;
   }
 
-  public boolean canBeSend(String message) {
+  public String getMessage() {
+    return message;
+  }
+
+  public boolean canBeSend() {
     return message.startsWith(character);
   }
 
-  public MutableText formatMessage(ServerPlayerEntity player, String message) {
-    String contentMessage = formatContentMessage(player, message);
+  public MutableText formatMessage(ServerPlayerEntity player) {
+    String contentMessage = formatContentMessage(player);
     return Text.literal(contentMessage).styled(style -> 
-      style.withColor(TextColor.fromRgb(color))
+      style.withColor(TextColor.fromRgb(getFadedColor()))
     );
   }
 
-  public String formatContentMessage(ServerPlayerEntity player, String message) {
+  public String formatContentMessage(ServerPlayerEntity player) {
     return getChatName(player) + " " + message.substring(1).trim();
   }
 
+  public void sendMessage(ServerPlayerEntity player) {
+    player.sendMessage(
+      this.formatMessage(player),
+      false
+    );
+  }
+
+  public void setDistance(int distance) {
+    this.distance = distance;
+  }
+
+  /*
+   * Return the name of the player for the chat
+   * Example : <Jeb_>
+   */
   protected String getChatName(ServerPlayerEntity player) {
     return "<" + player.getName().getString() + ">";
+  }
+
+  protected int getDistance() {
+    return distance;
+  }
+
+  /*
+   * Return the color for the message with the opacity
+   * The opacity is defined from the distance between the two players
+   */
+  protected int getFadedColor() {
+    if (distance == null) {
+      return this.color;
+    }
+
+    int maxDistance = radius;
+
+      // Calcul de la "transparence" (de 0.0 à 1.0), 1.0 = près, 0.0 = loin
+    double fadeFactor = 1.0 - Math.min(distance / maxDistance, 1.0);
+
+    // Calculer les nouvelles composantes RGB en fonction du facteur de fade
+    int red = (int) ((color >> 16 & 0xFF) * fadeFactor);
+    int green = (int) ((color >> 8 & 0xFF) * fadeFactor);
+    int blue = (int) ((color & 0xFF) * fadeFactor);
+
+    // Combiner les composantes pour reformer la couleur avec un niveau de fade
+    int fadedColor = (red << 16) | (green << 8) | blue;
+
+    return fadedColor;
   }
 }

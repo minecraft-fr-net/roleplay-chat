@@ -76,15 +76,16 @@ public abstract class MessageType {
 
     int maxDistance = radius;
 
-      // Calcul de la "transparence" (de 0.0 à 1.0), 1.0 = près, 0.0 = loin
-    double fadeFactor = 1.0 - Math.min(distance / maxDistance, 1.0);
+    // Calcul du facteur de fade entre 0 (proche) et 1 (loin)
+    // double fadeFactor = Math.min(distance / maxDistance, 1.0);
+    float fadeFactor = Math.min((float)distance / (float)maxDistance, 1.0f);
 
-    // Calculer les nouvelles composantes RGB en fonction du facteur de fade
-    int red = (int) ((color >> 16 & 0xFF) * fadeFactor);
-    int green = (int) ((color >> 8 & 0xFF) * fadeFactor);
-    int blue = (int) ((color & 0xFF) * fadeFactor);
+    // Calcul des nouvelles composantes RGB basées sur le fadeFactor
+    int red = (int) ((color >> 16 & 0xFF) * (1.0 - fadeFactor));
+    int green = (int) ((color >> 8 & 0xFF) * (1.0 - fadeFactor));
+    int blue = (int) ((color & 0xFF) * (1.0 - fadeFactor));
 
-    // Combiner les composantes pour reformer la couleur avec un niveau de fade
+    // Combiner les composantes pour obtenir la nouvelle couleur
     int fadedColor = (red << 16) | (green << 8) | blue;
 
     return fadedColor;

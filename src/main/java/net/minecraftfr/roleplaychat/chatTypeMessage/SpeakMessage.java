@@ -6,6 +6,7 @@ public class SpeakMessage extends MessageType {
   public static final int RADIUS = 30;
   public static final int COLOR = 0xFFFFFF;
   public static final String CHARACTER = null;
+  public static final String COMMAND = "speak";
 
   public SpeakMessage(String message) {
     super(message, RADIUS, COLOR, CHARACTER);

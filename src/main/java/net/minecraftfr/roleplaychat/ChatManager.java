@@ -43,9 +43,19 @@ public class ChatManager {
    * Send to all players if radius is 0
    */
   private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType) {
-    int radius = messageType.getRadius();
     Vec3d position = player.getPos();
-    player.getServerWorld().getPlayers().forEach(otherPlayer -> {
+
+    sendMessageToPlayerListFromPosition(
+      position,
+      player.getServerWorld().getPlayers(),
+      messageType
+    );
+  }
+
+  public static void sendMessageToPlayerListFromPosition(Vec3d position, List<ServerPlayerEntity> players,  MessageType messageType) {
+    int radius = messageType.getRadius();
+
+    players.forEach(otherPlayer -> {
       int distance = (int) Math.round(position.distanceTo(otherPlayer.getPos()));
 
       if (radius == 0 || distance <= radius) {

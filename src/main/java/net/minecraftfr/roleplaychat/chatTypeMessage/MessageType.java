@@ -10,6 +10,7 @@ public abstract class MessageType {
   protected int radius;
   protected int color;
   protected String character;
+  protected String command;
   protected Integer distance;
 
   public MessageType(String message, int radius, int color, String character) {

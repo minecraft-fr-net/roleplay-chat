@@ -3,7 +3,10 @@ package net.minecraftfr.roleplaychat;
 import java.util.Arrays;
 import java.util.List;
 
+import org.joml.Math;
+
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.MessageType;
@@ -39,14 +42,15 @@ public class ChatManager {
    * Send message to players within a certain radius in the specified color
    * Send to all players if radius is 0
    */
-  private void sendLocalMessage(ServerPlayerEntity player, MessageType speakMessage) {
-    int radius = speakMessage.getRadius();
+  private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType) {
+    int radius = messageType.getRadius();
+    Vec3d position = player.getPos();
     player.getServerWorld().getPlayers().forEach(otherPlayer -> {
-      int distance = (int) Math.round(player.getPos().distanceTo(otherPlayer.getPos()));
+      int distance = (int) Math.round(position.distanceTo(otherPlayer.getPos()));
 
       if (radius == 0 || distance <= radius) {
-        speakMessage.setDistance(distance);
-        speakMessage.sendMessage(otherPlayer);
+        messageType.setDistance(distance);
+        messageType.sendMessage(otherPlayer);
       }
     });
   }

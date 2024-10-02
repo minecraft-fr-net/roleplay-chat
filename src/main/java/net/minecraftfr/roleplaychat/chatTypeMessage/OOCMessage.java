@@ -6,6 +6,7 @@ public class OOCMessage extends MessageType {
   public static final int RADIUS = 60;
   public static final int COLOR = 0xAEC1D5;
   public static final String CHARACTER = "(";
+  public static final String COMMAND = "ooc";
   
   public OOCMessage(String message) {
     super(message, RADIUS, COLOR, CHARACTER);

@@ -6,6 +6,7 @@ public class GlobalOOCMessage extends MessageType {
   public static final int RADIUS = 0;
   public static final int COLOR = 0xAEC1D5;
   public static final String CHARACTER = "[";
+  public static final String COMMAND = "globalOoc";
 
   public GlobalOOCMessage(String message) {
     super(message, RADIUS, COLOR, CHARACTER);

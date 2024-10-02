@@ -6,6 +6,7 @@ public class ActionMessage extends MessageType {
   public static final int RADIUS = 25;
   public static final int COLOR = 0x33CC33;
   public static final String CHARACTER = "*";
+  public static final String COMMAND = "action";
 
   public ActionMessage(String message) {
     super(message, RADIUS, COLOR, CHARACTER);

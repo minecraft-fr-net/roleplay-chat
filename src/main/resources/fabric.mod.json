@@ -3,9 +3,9 @@
 	"id": "roleplay-chat",
 	"version": "${version}",
 	"name": "Roleplay chat",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "This mod allows players to communicate in a roleplay (RP) setting with different ranges for various types of messages.",
 	"authors": [
-		"Me!"
+		"cprodhomme"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",

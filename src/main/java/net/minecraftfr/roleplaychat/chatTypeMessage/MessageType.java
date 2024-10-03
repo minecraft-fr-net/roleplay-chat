@@ -43,9 +43,9 @@ public abstract class MessageType {
     return getChatName(player) + " " + message.substring(1).trim();
   }
 
-  public void sendMessage(ServerPlayerEntity player) {
-    player.sendMessage(
-      this.formatMessage(player),
+  public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
+    receiver.sendMessage(
+      this.formatMessage(sender),
       false
     );
   }

@@ -1,11 +1,14 @@
 package net.minecraftfr.roleplaychat.command;
 
+import java.util.List;
+
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraftfr.roleplaychat.ChatManager;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
@@ -15,7 +18,6 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.ShoutMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SupportMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.WhisperMessage;
-import net.minecraft.util.math.Vec3d;
 
 public class RoleplayChatCommands {
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
@@ -112,19 +114,15 @@ public class RoleplayChatCommands {
   }
 
   private static void sendMessageFromCommand(MessageType messageType, CommandContext<ServerCommandSource> context) {
-    ServerCommandSource source = context.getSource();
+    List<ServerPlayerEntity> players = context.getSource().getServer().getPlayerManager().getPlayerList();
+    ServerPlayerEntity sender = players.get(0);
 
-    Vec3d position;
-    if (source.getEntity() != null) {
-      position = source.getEntity().getPos();
-    } else {
-      position = source.getPosition();
+    if (!players.isEmpty()) {
+      ChatManager.sendMessageToPlayerListFromPosition(
+        sender,
+        players,
+        messageType
+      );
     }
-
-    ChatManager.sendMessageToPlayerListFromPosition(
-      position,
-      context.getSource().getServer().getPlayerManager().getPlayerList(),
-      messageType
-    );
   }
 }

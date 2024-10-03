@@ -6,7 +6,6 @@ import java.util.List;
 import org.joml.Math;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.MessageType;
@@ -43,24 +42,22 @@ public class ChatManager {
    * Send to all players if radius is 0
    */
   private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType) {
-    Vec3d position = player.getPos();
-
     sendMessageToPlayerListFromPosition(
-      position,
+      player,
       player.getServerWorld().getPlayers(),
       messageType
     );
   }
 
-  public static void sendMessageToPlayerListFromPosition(Vec3d position, List<ServerPlayerEntity> players,  MessageType messageType) {
+  public static void sendMessageToPlayerListFromPosition(ServerPlayerEntity sender, List<ServerPlayerEntity> players,  MessageType messageType) {
     int radius = messageType.getRadius();
 
     players.forEach(otherPlayer -> {
-      int distance = (int) Math.round(position.distanceTo(otherPlayer.getPos()));
+      int distance = (int) Math.round(sender.getPos().distanceTo(otherPlayer.getPos()));
 
       if (radius == 0 || distance <= radius) {
         messageType.setDistance(distance);
-        messageType.sendMessage(otherPlayer);
+        messageType.sendMessage(sender, otherPlayer);
       }
     });
   }

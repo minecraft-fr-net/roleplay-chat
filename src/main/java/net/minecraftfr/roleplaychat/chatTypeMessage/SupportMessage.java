@@ -1,7 +1,5 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import org.spongepowered.asm.mixin.Overwrite;
-
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class SupportMessage extends MessageType {
@@ -14,7 +12,6 @@ public class SupportMessage extends MessageType {
     super(message, RADIUS, COLOR, CHARACTER);
   }
 
-  @Overwrite
   public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
     if (canReceive(sender, receiver)) {
       super.sendMessage(sender, receiver);

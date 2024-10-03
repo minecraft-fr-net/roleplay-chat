@@ -9,6 +9,6 @@ public class PrivateMessage {
   public static final String COMMAND = "m";
 
   public static boolean canBeSend(String message) {
-    return message.startsWith(CHARACTER);
+    return true;
   }
 }

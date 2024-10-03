@@ -9,6 +9,6 @@ public class ReplyMessage {
   public static final String COMMAND = "r";
 
   public static boolean canBeSend(String message) {
-    return message.startsWith(CHARACTER);
+    return true;
   }
 }

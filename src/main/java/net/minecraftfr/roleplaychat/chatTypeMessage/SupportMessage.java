@@ -16,16 +16,17 @@ public class SupportMessage extends MessageType {
 
   @Overwrite
   public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
-    if (canReceive(receiver)) {
+    if (canReceive(sender, receiver)) {
       super.sendMessage(sender, receiver);
     }
   }
 
   /*
    * Return if receiver can receipt the message
-   * only if the receiver is OP (admin)
+   * only if the receiver is OP (admin) or if the sender is the receiver
    */
-  public boolean canReceive(ServerPlayerEntity receiver) {
-    return receiver.hasPermissionLevel(2);
+  public boolean canReceive(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
+    return receiver.hasPermissionLevel(2) || 
+      sender.getUuid() == receiver.getUuid();
   }
 }

@@ -1,5 +1,6 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class SupportMessage extends MessageType {
@@ -23,7 +24,7 @@ public class SupportMessage extends MessageType {
    * only if the receiver is OP (admin) or if the sender is the receiver
    */
   public boolean canReceive(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
-    return receiver.hasPermissionLevel(2) || 
-      sender.getUuid() == receiver.getUuid();
+    return CommandManager.GAMEMASTERS_CHECK.allows(receiver.getCommandSource().getPermissions())
+      || sender.getUuid().equals(receiver.getUuid());
   }
 }

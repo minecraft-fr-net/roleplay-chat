@@ -44,7 +44,7 @@ public class ChatManager {
   private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType) {
     sendMessageToPlayerListFromPosition(
       player,
-      player.getServerWorld().getPlayers(),
+      player.getEntityWorld().getPlayers(p -> true),
       messageType
     );
   }
@@ -53,7 +53,7 @@ public class ChatManager {
     int radius = messageType.getRadius();
 
     players.forEach(otherPlayer -> {
-      int distance = (int) Math.round(sender.getPos().distanceTo(otherPlayer.getPos()));
+      int distance = (int) Math.round(sender.distanceTo(otherPlayer));
 
       if (radius == 0 || distance <= radius) {
         messageType.setDistance(distance);

@@ -114,15 +114,11 @@ public class RoleplayChatCommands {
   }
 
   private static void sendMessageFromCommand(MessageType messageType, CommandContext<ServerCommandSource> context) {
-    List<ServerPlayerEntity> players = context.getSource().getServer().getPlayerManager().getPlayerList();
-    ServerPlayerEntity sender = players.get(0);
-
-    if (!players.isEmpty()) {
-      ChatManager.sendMessageToPlayerListFromPosition(
-        sender,
-        players,
-        messageType
-      );
+    ServerPlayerEntity sender = context.getSource().getPlayer();
+    if (sender == null) {
+      return;
     }
+    List<ServerPlayerEntity> players = context.getSource().getServer().getPlayerManager().getPlayerList();
+    ChatManager.sendMessageToPlayerListFromPosition(sender, players, messageType);
   }
 }

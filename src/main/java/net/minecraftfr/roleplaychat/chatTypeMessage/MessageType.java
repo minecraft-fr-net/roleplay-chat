@@ -12,12 +12,24 @@ public abstract class MessageType {
   protected String character;
   protected String command;
   protected Integer distance;
+  /** Longueur du préfixe retiré dans {@link #contentAfterPrefix()} (0 = message entier). */
+  protected int prefixLength = 1;
 
   public MessageType(String message, int radius, int color, String character) {
     this.message = message;
     this.radius = radius;
     this.color = color;
     this.character = character;
+  }
+
+  protected String contentAfterPrefix() {
+    if (prefixLength <= 0) {
+      return message.trim();
+    }
+    if (prefixLength >= message.length()) {
+      return "";
+    }
+    return message.substring(prefixLength).trim();
   }
 
   public int getRadius() {
@@ -29,7 +41,7 @@ public abstract class MessageType {
   }
 
   public boolean canBeSend() {
-    return message.startsWith(character);
+    return character != null && message.startsWith(character);
   }
 
   public MutableText formatMessage(ServerPlayerEntity player) {
@@ -40,7 +52,7 @@ public abstract class MessageType {
   }
 
   public String formatContentMessage(ServerPlayerEntity player) {
-    return getChatName(player) + " " + message.substring(1).trim();
+    return getChatName(player) + " " + contentAfterPrefix();
   }
 
   public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
@@ -76,9 +88,11 @@ public abstract class MessageType {
     }
 
     int maxDistance = radius;
+    if (maxDistance <= 0) {
+      return this.color;
+    }
 
     // Calcul du facteur de fade entre 0 (proche) et 1 (loin)
-    // double fadeFactor = Math.min(distance / maxDistance, 1.0);
     float fadeFactor = Math.min((float)distance / (float)maxDistance, 1.0f);
 
     // Calcul des nouvelles composantes RGB basées sur le fadeFactor

@@ -1,19 +1,18 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 
 public class ActionMessage extends MessageType {
-  public static final int RADIUS = 25;
-  public static final int COLOR = 0x33CC33;
-  public static final String CHARACTER = "*";
   public static final String COMMAND = "action";
 
-  public ActionMessage(String message) {
-    super(message, RADIUS, COLOR, CHARACTER);
+  public ActionMessage(String message, MessageTypeSettings settings) {
+    super(message, settings.radius(), settings.colorRgb(), settings.firstPrefix());
+    this.prefixLength = settings.prefixLengthFor(message);
   }
 
   @Override
   public String formatContentMessage(ServerPlayerEntity player) {
-    return "* " + player.getName().getString() + " " + message.substring(1).trim();
+    return "* " + player.getName().getString() + " " + contentAfterPrefix();
   }
 }

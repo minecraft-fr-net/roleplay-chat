@@ -1,22 +1,20 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
+import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
+
 public class WhisperMessage extends MessageType {
-  public static final int RADIUS = 4;
-  public static final int COLOR = 0xCC33CC;
-  public static final String[] CHARACTERS = {"«", "\""};
   public static final String COMMAND = "whisper";
 
-  public WhisperMessage(String message) {
-    super(message, RADIUS, COLOR, null);
+  private final MessageTypeSettings settings;
+
+  public WhisperMessage(String message, MessageTypeSettings settings) {
+    super(message, settings.radius(), settings.colorRgb(), null);
+    this.settings = settings;
+    this.prefixLength = settings.prefixLengthFor(message);
   }
 
   @Override
   public boolean canBeSend() {
-    for (String character : CHARACTERS) {
-      if (message.startsWith(character)) {
-        return true;
-      }
-    }
-    return false;
+    return settings.messageMatchesPrefix(message);
   }
 }

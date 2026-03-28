@@ -1,12 +1,12 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
+import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
+
 public class ShoutMessage extends MessageType {
-  public static final int RADIUS = 80;
-  public static final int COLOR = 0xCC3300;
-  public static final String CHARACTER = "!";
   public static final String COMMAND = "shout";
 
-  public ShoutMessage(String message) {
-    super(message, RADIUS, COLOR, CHARACTER);
+  public ShoutMessage(String message, MessageTypeSettings settings) {
+    super(message, settings.radius(), settings.colorRgb(), settings.firstPrefix());
+    this.prefixLength = settings.prefixLengthFor(message);
   }
 }

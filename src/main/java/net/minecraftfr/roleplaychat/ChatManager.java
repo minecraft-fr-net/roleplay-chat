@@ -13,15 +13,17 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.OOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ShoutMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.WhisperMessage;
+import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
 
 public class ChatManager {
   public boolean handleChatMessage(ServerPlayerEntity player, String message) {
+    RoleplayChatConfig cfg = RoleplayChatConfig.get();
     List<MessageType> messageTypes = Arrays.asList(
-      new ShoutMessage(message),
-      new WhisperMessage(message),
-      new ActionMessage(message),
-      new OOCMessage(message),
-      new GlobalOOCMessage(message)
+      new ShoutMessage(message, cfg.shout()),
+      new WhisperMessage(message, cfg.whisper()),
+      new ActionMessage(message, cfg.action()),
+      new OOCMessage(message, cfg.ooc()),
+      new GlobalOOCMessage(message, cfg.globalOoc())
     );
 
     for (MessageType type : messageTypes) {
@@ -32,7 +34,7 @@ public class ChatManager {
     }
 
     // Default message type
-    SpeakMessage speakMessage = new SpeakMessage(message);
+    SpeakMessage speakMessage = new SpeakMessage(message, cfg.speak());
     this.sendLocalMessage(player, speakMessage);
     return false;
   }

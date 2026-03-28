@@ -2,17 +2,17 @@ package net.minecraftfr.roleplaychat.chatTypeMessage;
 
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 
 public class SupportMessage extends MessageType {
-  public static final int RADIUS = 0;
-  public static final int COLOR = 0xFF99CC;
-  public static final String CHARACTER = "?";
   public static final String COMMAND = "support";
 
-  public SupportMessage(String message) {
-    super(message, RADIUS, COLOR, CHARACTER);
+  public SupportMessage(String message, MessageTypeSettings settings) {
+    super(message, settings.radius(), settings.colorRgb(), settings.firstPrefix());
+    this.prefixLength = settings.prefixLengthFor(message);
   }
 
+  @Override
   public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
     if (canReceive(sender, receiver)) {
       super.sendMessage(sender, receiver);

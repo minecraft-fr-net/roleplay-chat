@@ -35,6 +35,7 @@ loom {
 			inherit client
 			name "Client Game Test"
 			vmArg "-Dfabric.client.gametest"
+			vmArg "-Dfabric.client.gametest.testModResourcesPath=${project.file('src/client/resources').absolutePath}"
 			runDir "build/gametest"
 		}
 	}

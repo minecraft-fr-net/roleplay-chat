@@ -8,7 +8,7 @@ import net.minecraft.client.option.Perspective;
 
 /**
  * Test client qui envoie des messages de chat de chaque type
- * et capture un screenshot pour vérifier l'affichage dans le chat.
+ * et vérifie l'affichage dans le chat par comparaison de screenshot.
  */
 @SuppressWarnings("UnstableApiUsage")
 public class ChatDisplayTest implements FabricClientGameTest {
@@ -51,8 +51,14 @@ public class ChatDisplayTest implements FabricClientGameTest {
     }
 
     /**
-     * Envoie un message de chat et capture un screenshot après 20 ticks
-     * (le temps que le message s'affiche dans le HUD).
+     * Envoie un message de chat, attend 20 ticks que le message s'affiche dans le HUD,
+     * puis vérifie que le template de référence (258×22px, dernière ligne du chat)
+     * est présent quelque part dans le screenshot.
+     *
+     * <p>Les templates sont des crops de la dernière ligne de message (fond sombre de
+     * la chat box, sans fond-monde) stockés dans {@code src/client/resources/templates/}.
+     * Cette approche est stable entre les runs car elle ignore le background du monde.
+     * Si le template est absent, il est créé automatiquement à la première exécution.
      */
     private static void sendAndCapture(ClientGameTestContext context, String message, String screenshotName) {
         context.runOnClient((MinecraftClient client) -> {
@@ -62,6 +68,6 @@ public class ChatDisplayTest implements FabricClientGameTest {
             }
         });
         context.waitTicks(20);
-        context.takeScreenshot(screenshotName);
+        context.assertScreenshotEquals(screenshotName);
     }
 }

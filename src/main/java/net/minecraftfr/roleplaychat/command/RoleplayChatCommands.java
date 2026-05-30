@@ -139,6 +139,6 @@ public class RoleplayChatCommands {
       return;
     }
     List<ServerPlayerEntity> players = context.getSource().getServer().getPlayerManager().getPlayerList();
-    ChatManager.sendMessageToPlayerListFromPosition(sender, players, messageType);
+    ChatManager.sendMessageToPlayerListFromPosition(sender, players, messageType, null);
   }
 }

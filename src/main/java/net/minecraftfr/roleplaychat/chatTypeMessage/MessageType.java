@@ -1,9 +1,15 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
+import net.minecraft.network.message.SignedMessage;
+import net.minecraft.network.message.SentMessage;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class MessageType {
   protected String message;
@@ -55,11 +61,71 @@ public abstract class MessageType {
     return getChatName(player) + " " + contentAfterPrefix();
   }
 
+  /**
+   * Clé du chat type avec décoration pass-through via le champ {@code sender} :
+   * {@code parameters: ["sender"], %s} → affiche {@code params.name()} tel quel.
+   * Utilisé avec un {@link SignedMessage} signé → aucun indicateur dans le chat.
+   * Fallback Profileless si le message n'est pas signé (offline / intégré).
+   */
+  private static final RegistryKey<net.minecraft.network.message.MessageType> SIGNED_ROLEPLAY_CHAT_TYPE =
+      RegistryKey.of(RegistryKeys.MESSAGE_TYPE, Identifier.of("roleplay-chat", "signed_roleplay"));
+
+  /**
+   * Clé du chat type Profileless utilisé quand aucun {@link SignedMessage} n'est
+   * disponible (messages injectés depuis les tests).
+   */
+  private static final RegistryKey<net.minecraft.network.message.MessageType> ROLEPLAY_CHAT_TYPE =
+      RegistryKey.of(RegistryKeys.MESSAGE_TYPE, Identifier.of("roleplay-chat", "roleplay"));
+
+  /**
+   * Envoie le message formaté au joueur cible.
+   *
+   * <p>Si {@code signedMessage} est non-null, utilise {@link SentMessage#of(SignedMessage)}
+   * avec le chat type {@code signed_roleplay} (décoration = notre texte pré-formaté via le
+   * champ {@code sender}) : le {@link net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket}
+   * résultant porte la signature originale du joueur → zéro indicateur côté client.
+   *
+   * <p>Si {@code signedMessage} est null (messages synthétiques de tests), bascule
+   * sur un {@link SentMessage.Profileless} avec le chat type {@code roleplay}.
+   *
+   * @param sender        joueur qui envoie le message
+   * @param receiver      joueur qui reçoit le message
+   * @param signedMessage message signé d'origine, ou {@code null} pour les injections de test
+   */
+  public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver,
+                          @Nullable SignedMessage signedMessage) {
+    MutableText formatted = this.formatMessage(sender);
+
+    if (signedMessage != null) {
+      // withUnsignedContent : le client affiche notre texte coloré (getContent() retourne
+      // directement le unsignedContent). La signature originale reste valide (couvre le
+      // contenu brut non modifié). Affiche l'indicateur "modified" côté client.
+      SignedMessage modified = signedMessage.withUnsignedContent(formatted);
+      var params = net.minecraft.network.message.MessageType.params(
+          ROLEPLAY_CHAT_TYPE,
+          sender.getRegistryManager(),
+          sender.getName()
+      );
+      SentMessage.of(modified).send(receiver, false, params);
+    } else {
+      // Pas de message signé disponible (tests) : fallback Profileless
+      var params = net.minecraft.network.message.MessageType.params(
+          ROLEPLAY_CHAT_TYPE,
+          sender.getRegistryManager(),
+          sender.getName()
+      );
+      new SentMessage.Profileless(formatted).send(receiver, false, params);
+    }
+  }
+
+  /**
+   * Surcharge sans {@link SignedMessage} pour les injections de test (Profileless).
+   *
+   * @deprecated Préférer {@link #sendMessage(ServerPlayerEntity, ServerPlayerEntity, SignedMessage)}
+   *             en production pour éviter l'indicateur système.
+   */
   public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
-    receiver.sendMessage(
-      this.formatMessage(sender),
-      false
-    );
+    sendMessage(sender, receiver, null);
   }
 
   public void setDistance(int distance) {

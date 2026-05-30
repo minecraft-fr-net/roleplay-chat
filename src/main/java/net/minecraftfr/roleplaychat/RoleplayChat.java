@@ -20,7 +20,7 @@ public class RoleplayChat implements ModInitializer {
     RoleplayChatConfig.load();
 
     ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, typeKey) -> {
-      return chatManager.handleChatMessage(sender, message.getContent().getString());
+      return chatManager.handleChatMessage(sender, message.getContent().getString(), message);
     });
 
     CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {

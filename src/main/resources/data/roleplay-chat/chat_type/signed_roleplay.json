@@ -1,0 +1,10 @@
+{
+  "chat": {
+    "translation_key": "roleplay-chat.chat_type.signed_roleplay",
+    "parameters": ["sender"]
+  },
+  "narration": {
+    "translation_key": "chat.type.text.narrate",
+    "parameters": ["sender", "content"]
+  }
+}

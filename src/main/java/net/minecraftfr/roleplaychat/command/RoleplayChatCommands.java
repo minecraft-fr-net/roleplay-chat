@@ -24,7 +24,7 @@ import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
 public class RoleplayChatCommands {
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
     dispatcher.register(CommandManager.literal("roleplaychat")
-      .requires(CommandManager.requirePermissionLevel(CommandManager.OWNERS_CHECK))
+      .requires(CommandManager.requirePermissionLevel(4))
       .then(CommandManager.literal("reload")
         .executes(context -> {
           if (RoleplayChatConfig.reload()) {

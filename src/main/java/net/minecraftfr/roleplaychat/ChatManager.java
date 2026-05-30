@@ -6,6 +6,7 @@ import java.util.List;
 import org.joml.Math;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.MessageType;
@@ -46,7 +47,7 @@ public class ChatManager {
   private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType) {
     sendMessageToPlayerListFromPosition(
       player,
-      player.getEntityWorld().getPlayers(p -> true),
+      ((ServerWorld) player.getWorld()).getPlayers(p -> true),
       messageType
     );
   }

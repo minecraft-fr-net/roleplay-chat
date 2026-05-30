@@ -88,6 +88,18 @@ public class MessageTypePrefixTest implements CustomTestMethodInvoker {
     }
 
     @GameTest
+    public void testSpeakRadiusFiltering(TestContext context) {
+        int radius = MessageTypeSettings.speakDefault().radius(); // 30
+        int distanceNear = 25;
+        int distanceFar  = 35;
+        assertTrue(context,  distanceNear <= radius,
+            "Distance " + distanceNear + " doit être reçue dans le rayon speak (" + radius + ")");
+        assertFalse(context, distanceFar  <= radius,
+            "Distance " + distanceFar + " doit être filtrée par le rayon speak (" + radius + ")");
+        context.complete();
+    }
+
+    @GameTest
     public void testRadiusDefaultValues(TestContext context) {
         assertEquals(context, 4,  MessageTypeSettings.whisperDefault().radius(),   "Whisper : rayon attendu 4");
         assertEquals(context, 25, MessageTypeSettings.actionDefault().radius(),    "Action  : rayon attendu 25");

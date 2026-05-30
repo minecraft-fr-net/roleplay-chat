@@ -20,6 +20,12 @@
 		],
 		"client": [
 			"net.minecraftfr.roleplaychat.RoleplayChatClient"
+		],
+		"fabric-gametest": [
+			"net.minecraftfr.roleplaychat.test.MessageTypePrefixTest"
+		],
+		"fabric-client-gametest": [
+			"net.minecraftfr.roleplaychat.test.client.ChatDisplayTest"
 		]
 	},
 	"mixins": [
@@ -30,8 +36,8 @@
 		}
 	],
 	"depends": {
-		"fabricloader": ">=0.18.5",
-		"minecraft": "~1.21.11",
+		"fabricloader": ">=0.16.13",
+		"minecraft": "~1.21.6",
 		"java": ">=21",
 		"fabric-api": "*"
 	},

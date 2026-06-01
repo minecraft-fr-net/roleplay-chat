@@ -26,7 +26,8 @@
 		],
 		"fabric-client-gametest": [
 			"net.minecraftfr.roleplaychat.test.client.ChatDisplayTest",
-			"net.minecraftfr.roleplaychat.test.client.ChatRadiusDisplayTest"
+			"net.minecraftfr.roleplaychat.test.client.ChatRadiusDisplayTest",
+			"net.minecraftfr.roleplaychat.test.client.RpNameDisplayTest"
 		]
 	},
 	"mixins": [

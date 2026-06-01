@@ -31,6 +31,12 @@ loom {
 			vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.get()}/junit.xml"
 			runDir "build/gametest"
 		}
+		// Nom d'utilisateur fixe pour avoir un UUID constant entre les runs
+		// UUID de DevPlayer : 74ffd488-66e1-390e-b3a4-68445a2d0ab8
+		client {
+			programArgs "--username", "DevPlayer"
+		}
+
 		clientGameTest {
 			inherit client
 			name "Client Game Test"
@@ -42,6 +48,15 @@ loom {
 }
 
 test.dependsOn runGametest
+
+// Crée eula.txt dans le runDir avant le lancement des client gametests,
+// requis pour que TestDedicatedServerContext puisse démarrer un serveur dédié.
+tasks.named("runClientGameTest").configure {
+	doFirst {
+		mkdir "build/gametest"
+		file("build/gametest/eula.txt").text = "eula=true\n"
+	}
+}
 
 dependencies {
 	// To change the versions see the gradle.properties file

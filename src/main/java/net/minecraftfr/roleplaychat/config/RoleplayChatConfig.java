@@ -29,6 +29,7 @@ public final class RoleplayChatConfig {
   private final MessageTypeSettings ooc;
   private final MessageTypeSettings globalOoc;
   private final MessageTypeSettings support;
+  private final MessageTypeSettings roll;
 
   private RoleplayChatConfig(
       MessageTypeSettings speak,
@@ -37,7 +38,8 @@ public final class RoleplayChatConfig {
       MessageTypeSettings action,
       MessageTypeSettings ooc,
       MessageTypeSettings globalOoc,
-      MessageTypeSettings support) {
+      MessageTypeSettings support,
+      MessageTypeSettings roll) {
     this.speak = speak;
     this.whisper = whisper;
     this.shout = shout;
@@ -45,6 +47,7 @@ public final class RoleplayChatConfig {
     this.ooc = ooc;
     this.globalOoc = globalOoc;
     this.support = support;
+    this.roll = roll;
   }
 
   public static RoleplayChatConfig get() {
@@ -59,7 +62,8 @@ public final class RoleplayChatConfig {
         MessageTypeSettings.actionDefault(),
         MessageTypeSettings.oocDefault(),
         MessageTypeSettings.globalOocDefault(),
-        MessageTypeSettings.supportDefault());
+        MessageTypeSettings.supportDefault(),
+        MessageTypeSettings.rollDefault());
   }
 
   public static void load() {
@@ -109,7 +113,8 @@ public final class RoleplayChatConfig {
     MessageTypeSettings ooc = parseEntry("ooc", root, MessageTypeSettings.oocDefault(), false);
     MessageTypeSettings globalOoc = parseEntry("globalOoc", root, MessageTypeSettings.globalOocDefault(), false);
     MessageTypeSettings support = parseEntry("support", root, MessageTypeSettings.supportDefault(), false);
-    return new RoleplayChatConfig(speak, whisper, shout, action, ooc, globalOoc, support);
+    MessageTypeSettings roll = parseEntry("roll", root, MessageTypeSettings.rollDefault(), true);
+    return new RoleplayChatConfig(speak, whisper, shout, action, ooc, globalOoc, support, roll);
   }
 
   private static MessageTypeSettings parseEntry(
@@ -208,6 +213,7 @@ public final class RoleplayChatConfig {
       root.add("ooc", toJsonObject(config.ooc));
       root.add("globalOoc", toJsonObject(config.globalOoc));
       root.add("support", toJsonObject(config.support));
+      root.add("roll", toJsonObject(config.roll));
       try (Writer w = Files.newBufferedWriter(path, StandardCharsets.UTF_8)) {
         GSON.toJson(root, w);
       }
@@ -260,5 +266,9 @@ public final class RoleplayChatConfig {
 
   public MessageTypeSettings support() {
     return support;
+  }
+
+  public MessageTypeSettings roll() {
+    return roll;
   }
 }

@@ -16,8 +16,30 @@ Default colors, ranges, and prefix characters match the tables below; server adm
 |-----------|------------------|------------|-----------------------|-----------------------|-----------------------|
 | Whisper   | 🟪 Violet (#CC33CC) | 4 blocks   | `«` or `"` (configurable) | `/whisper <message>`  | Speak quietly to someone nearby             |
 | Action    | 🟩 Green (#3C3)  | 25 blocks  | `*`                   | `/action <message>`   | Describe an action you're performing (like `/me`) |
+| Roll      | 🟩 Green (#3C3)  | 25 blocks  | None                  | `/roll [notation]`    | Roll a die and show the result to nearby players  |
 | Speak     | ⬜️ White (#FFF)  | 30 blocks  | None                  | `/speak <message>`    | Normal conversation                         |
 | Shout     | 🟥 Red (#C30)    | 80 blocks  | `!`                   | `/shout <message>`    | Shout, for example, before attacking!       |
+
+### Dice Roll Command
+
+The `/roll` command simulates a dice roll and broadcasts the result to nearby players (same range as Action, 25 blocks by default).
+
+**Syntax:** `/roll [notation]`
+
+| Example | Result |
+|---------|--------|
+| `/roll` | Rolls a d20 (default) |
+| `/roll d6` | Rolls a d6 |
+| `/roll 1d20+3` | Rolls a d20 and adds 3 |
+| `/roll d8-1` | Rolls a d8 and subtracts 1 |
+
+**Notation format:** `[N]d<faces>[+/-bonus]` — the count prefix (`1d`, `2d`, …) is optional and only one die is always rolled.
+
+**Display example:**
+```
+* Alice [1d20+3] → 17  (14+3)
+* Bob [1d6] → 4
+```
 
 ## Additional Commands (Optional)
 These commands are for **Out of Character (OOC)** interactions. Use them sparingly! Thank you.
@@ -73,4 +95,4 @@ Each message type is a JSON object with:
 }
 ```
 
-Keys for all supported types: `speak`, `whisper`, `shout`, `action`, `ooc`, `globalOoc`, `support`.
+Keys for all supported types: `speak`, `whisper`, `shout`, `action`, `ooc`, `globalOoc`, `support`, `roll`.

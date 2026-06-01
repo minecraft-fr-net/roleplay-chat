@@ -1,4 +1,6 @@
 {
   "roleplay-chat.chat_type.roleplay": "%s",
-  "roleplay-chat.chat_type.signed_roleplay": "%s"
+  "roleplay-chat.chat_type.signed_roleplay": "%s",
+  "roleplay-chat.roll.critical_success": "(Critical Success)",
+  "roleplay-chat.roll.critical_failure": "(Critical Failure)"
 }

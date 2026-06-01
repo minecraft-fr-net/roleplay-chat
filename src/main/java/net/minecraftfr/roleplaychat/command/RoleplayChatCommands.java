@@ -15,6 +15,7 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.MessageType;
 import net.minecraftfr.roleplaychat.chatTypeMessage.OOCMessage;
+import net.minecraftfr.roleplaychat.chatTypeMessage.RollMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ShoutMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SupportMessage;
@@ -131,6 +132,54 @@ public class RoleplayChatCommands {
         return 1;
       }))
     );
+
+    dispatcher.register(CommandManager.literal(RollMessage.COMMAND)
+      .executes(ctx -> executeRoll(ctx, "1d20"))
+      .then(CommandManager.argument("notation", StringArgumentType.word())
+        .executes(ctx -> executeRoll(ctx, StringArgumentType.getString(ctx, "notation"))))
+    );
+  }
+
+  private static final java.util.regex.Pattern DICE_PATTERN =
+      java.util.regex.Pattern.compile("^(\\d+)?[dD](\\d+)([+-]\\d+)?$");
+
+  /**
+   * Parse et exécute un jet de dé à partir d'une notation du type {@code 1d20+3}.
+   * Formats acceptés : {@code d20}, {@code 1d20}, {@code d6-1}, {@code 2d8+2} (le
+   * multiplicateur est ignoré — un seul dé est toujours lancé).
+   */
+  private static int executeRoll(CommandContext<ServerCommandSource> ctx, String notation) {
+    ServerPlayerEntity sender = ctx.getSource().getPlayer();
+    if (sender == null) return 0;
+
+    java.util.regex.Matcher m = DICE_PATTERN.matcher(notation);
+    if (!m.matches()) {
+      ctx.getSource().sendError(Text.literal(
+          "Notation invalide. Exemples : d20  1d20+3  d6-1"));
+      return 0;
+    }
+
+    int sides;
+    int bonus = 0;
+    try {
+      sides = Integer.parseInt(m.group(2));
+      if (m.group(3) != null) {
+        bonus = Integer.parseInt(m.group(3)); // inclut le signe + ou -
+      }
+    } catch (NumberFormatException e) {
+      ctx.getSource().sendError(Text.literal("Notation invalide. Exemples : d20  1d20+3  d6-1"));
+      return 0;
+    }
+
+    if (sides < 2 || sides > 1000) {
+      ctx.getSource().sendError(Text.literal("Le nombre de faces doit être entre 2 et 1000."));
+      return 0;
+    }
+
+    RollMessage roll = new RollMessage(sides, bonus, RoleplayChatConfig.get().roll());
+    List<ServerPlayerEntity> players = ctx.getSource().getServer().getPlayerManager().getPlayerList();
+    ChatManager.sendMessageToPlayerListFromPosition(sender, players, roll, null);
+    return 1;
   }
 
   private static void sendMessageFromCommand(MessageType messageType, CommandContext<ServerCommandSource> context) {

@@ -6,6 +6,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -21,9 +22,14 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SupportMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.WhisperMessage;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
+import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
+import net.minecraftfr.roleplaychat.nameplate.RpNameUpdatePayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public class RoleplayChatCommands {
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+    registerRpNameCommand(dispatcher);
+
     dispatcher.register(CommandManager.literal("roleplaychat")
       .requires(CommandManager.requirePermissionLevel(4))
       .then(CommandManager.literal("reload")
@@ -180,6 +186,56 @@ public class RoleplayChatCommands {
     List<ServerPlayerEntity> players = ctx.getSource().getServer().getPlayerManager().getPlayerList();
     ChatManager.sendMessageToPlayerListFromPosition(sender, players, roll, null);
     return 1;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Commande /rpname
+  // ---------------------------------------------------------------------------
+
+  private static final int RP_NAME_MAX_LENGTH = 32;
+
+  static void registerRpNameCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+    dispatcher.register(CommandManager.literal("rpname")
+      .then(CommandManager.argument("name", StringArgumentType.greedyString())
+        .executes(ctx -> {
+          String name = StringArgumentType.getString(ctx, "name").trim();
+          ServerPlayerEntity player = ctx.getSource().getPlayer();
+          if (player == null) return 0;
+
+          if (name.isEmpty()) {
+            ctx.getSource().sendError(Text.literal("Le pseudo RP ne peut pas être vide."));
+            return 0;
+          }
+          if (name.length() > RP_NAME_MAX_LENGTH) {
+            ctx.getSource().sendError(Text.literal(
+                "Le pseudo RP ne peut pas dépasser " + RP_NAME_MAX_LENGTH + " caractères."));
+            return 0;
+          }
+
+          var server = ctx.getSource().getServer();
+          RpNameStore store = RpNameStore.get(server);
+
+          if (store.isNameTaken(name, player.getUuid())) {
+            ctx.getSource().sendError(Text.literal(
+                "Le pseudo « " + name + " » est déjà utilisé par un autre joueur."));
+            return 0;
+          }
+
+          store.setRpName(player.getUuid(), name);
+
+          // Synchroniser le nouveau nom RP avec tous les clients connectés
+          RpNameUpdatePayload payload = new RpNameUpdatePayload(player.getUuid(), name);
+          server.getPlayerManager().getPlayerList().forEach(p ->
+              ServerPlayNetworking.send(p, payload));
+
+          // Mettre à jour la liste Tab (PlayerList)
+          server.getPlayerManager().sendToAll(
+              new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, player));
+
+          ctx.getSource().sendFeedback(
+              () -> Text.literal("Pseudo RP défini : " + name), false);
+          return 1;
+        })));
   }
 
   private static void sendMessageFromCommand(MessageType messageType, CommandContext<ServerCommandSource> context) {

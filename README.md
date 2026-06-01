@@ -16,7 +16,7 @@ Default colors, ranges, and prefix characters match the tables below; server adm
 |-----------|------------------|------------|-----------------------|-----------------------|-----------------------|
 | Whisper   | 🟪 Violet (#CC33CC) | 4 blocks   | `«` or `"` (configurable) | `/whisper <message>`  | Speak quietly to someone nearby             |
 | Action    | 🟩 Green (#3C3)  | 25 blocks  | `*`                   | `/action <message>`   | Describe an action you're performing (like `/me`) |
-| Roll      | 🟩 Green (#3C3)  | 25 blocks  | None                  | `/roll [notation]`    | Roll a die and show the result to nearby players  |
+| Roll      | 🟩 Green (#3C3)  | 25 blocks  | None                  | `/roll 1d20+3`        | Roll a die and show the result to nearby players  |
 | Speak     | ⬜️ White (#FFF)  | 30 blocks  | None                  | `/speak <message>`    | Normal conversation                         |
 | Shout     | 🟥 Red (#C30)    | 80 blocks  | `!`                   | `/shout <message>`    | Shout, for example, before attacking!       |
 
@@ -24,7 +24,7 @@ Default colors, ranges, and prefix characters match the tables below; server adm
 
 The `/roll` command simulates a dice roll and broadcasts the result to nearby players (same range as Action, 25 blocks by default).
 
-**Syntax:** `/roll [notation]`
+**Syntax:** `/roll <dés>` — ex : `d20`, `1d20+3`, `d6-1`
 
 | Example | Result |
 |---------|--------|

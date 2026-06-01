@@ -137,6 +137,13 @@ public abstract class MessageType {
    * Example : <Jeb_>
    */
   protected String getChatName(ServerPlayerEntity player) {
+    net.minecraft.server.MinecraftServer server = player.getServer();
+    if (server != null) {
+      java.util.Optional<String> rp =
+          net.minecraftfr.roleplaychat.nameplate.RpNameStore.get(server)
+              .getRpName(player.getUuid());
+      if (rp.isPresent()) return "<" + rp.get() + ">";
+    }
     return "<" + player.getName().getString() + ">";
   }
 

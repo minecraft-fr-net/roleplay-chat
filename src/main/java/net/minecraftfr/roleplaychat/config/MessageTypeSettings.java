@@ -78,4 +78,8 @@ public final class MessageTypeSettings {
   public static MessageTypeSettings supportDefault() {
     return new MessageTypeSettings(0, 0xFF99CC, List.of("?"));
   }
+
+  public static MessageTypeSettings rollDefault() {
+    return new MessageTypeSettings(25, 0x33CC33, Collections.emptyList());
+  }
 }

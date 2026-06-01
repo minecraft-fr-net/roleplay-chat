@@ -8,6 +8,7 @@ import net.minecraft.text.Text;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.OOCMessage;
+import net.minecraftfr.roleplaychat.chatTypeMessage.RollMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ShoutMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SupportMessage;
@@ -108,6 +109,31 @@ public class MessageTypePrefixTest implements CustomTestMethodInvoker {
         assertEquals(context, 80, MessageTypeSettings.shoutDefault().radius(),     "Shout   : rayon attendu 80");
         assertEquals(context, 0,  MessageTypeSettings.globalOocDefault().radius(), "GlobalOOC : rayon attendu 0 (illimité)");
         assertEquals(context, 0,  MessageTypeSettings.supportDefault().radius(),   "Support   : rayon attendu 0 (illimité)");
+        assertEquals(context, 25, MessageTypeSettings.rollDefault().radius(),      "Roll      : rayon attendu 25");
+        context.complete();
+    }
+
+    @GameTest
+    public void testRollCannotBeSentFromChat(TestContext context) {
+        RollMessage msg = new RollMessage(20, 0, MessageTypeSettings.rollDefault());
+        assertFalse(context, msg.canBeSend(), "RollMessage ne doit pas s'activer depuis le chat (commande uniquement)");
+        context.complete();
+    }
+
+    @GameTest
+    public void testRollDefaultRadius(TestContext context) {
+        assertEquals(context, 25, MessageTypeSettings.rollDefault().radius(), "Roll : rayon par défaut attendu 25");
+        context.complete();
+    }
+
+    @GameTest
+    public void testRollResultInRange(TestContext context) {
+        for (int i = 0; i < 100; i++) {
+            RollMessage msg = new RollMessage(20, 0, MessageTypeSettings.rollDefault());
+            int roll = msg.getRoll();
+            assertTrue(context, roll >= 1 && roll <= 20,
+                "Résultat du d20 doit être entre 1 et 20, obtenu : " + roll);
+        }
         context.complete();
     }
 

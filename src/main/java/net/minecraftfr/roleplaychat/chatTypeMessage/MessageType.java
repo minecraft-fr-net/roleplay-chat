@@ -51,10 +51,31 @@ public abstract class MessageType {
   }
 
   public MutableText formatMessage(ServerPlayerEntity player) {
-    String contentMessage = formatContentMessage(player);
-    return Text.literal(contentMessage).styled(style -> 
-      style.withColor(TextColor.fromRgb(getFadedColor()))
-    );
+    int fadedColor = getFadedColor();
+    TextColor textColor = TextColor.fromRgb(fadedColor);
+
+    // Segment nom (ex. "<Elara>") avec couleur
+    MutableText nameSegment = Text.literal(getChatName(player))
+        .styled(style -> style.withColor(textColor));
+
+    // Hover MC username si le joueur a un pseudo RP
+    net.minecraft.server.MinecraftServer server = player.getServer();
+    if (server != null) {
+      String rpName = net.minecraftfr.roleplaychat.nameplate.RpNameStore
+          .get(server).getRpName(player.getUuid()).orElse(null);
+      if (rpName != null) {
+        String mcName = player.getName().getString();
+        nameSegment.styled(style ->
+            style.withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(
+                Text.literal(mcName))));
+      }
+    }
+
+    // Segment contenu (ex. " Bonjour à tous !")
+    MutableText contentSegment = Text.literal(" " + contentAfterPrefix())
+        .styled(style -> style.withColor(textColor));
+
+    return nameSegment.append(contentSegment);
   }
 
   public String formatContentMessage(ServerPlayerEntity player) {

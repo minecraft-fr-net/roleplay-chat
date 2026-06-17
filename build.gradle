@@ -14,6 +14,8 @@ repositories {
 }
 
 loom {
+	accessWidenerPath = file("src/main/resources/roleplay-chat.accesswidener")
+
 	splitEnvironmentSourceSets()
 
 	mods {
@@ -42,6 +44,8 @@ loom {
 			name "Client Game Test"
 			vmArg "-Dfabric.client.gametest"
 			vmArg "-Dfabric.client.gametest.testModResourcesPath=${project.file('src/client/resources').absolutePath}"
+			// Requis pour les tests qui spawnen un joueur via EmbeddedChannel (ex: NameplateDisplayTest)
+			vmArg "-Dfabric.client.gametest.disableNetworkSynchronizer"
 			runDir "build/gametest"
 		}
 	}

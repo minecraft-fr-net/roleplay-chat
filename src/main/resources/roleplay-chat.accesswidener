@@ -1,0 +1,3 @@
+accessWidener	v1	named
+# Donne accès à ClientWorld.players pour injecter un OtherClientPlayerEntity dans les gametests
+accessible	field	net/minecraft/client/world/ClientWorld	players	Ljava/util/List;

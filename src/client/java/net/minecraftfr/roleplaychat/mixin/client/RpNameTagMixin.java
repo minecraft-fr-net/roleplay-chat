@@ -7,9 +7,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 
 /**
@@ -34,11 +32,7 @@ public abstract class RpNameTagMixin {
     if (!((Object) this instanceof AbstractClientPlayerEntity self)) return;
     String rp = RpNameClientCache.get(self.getUuid());
     if (rp != null) {
-      String mcName = self.getName().getString();
-      MutableText label = Text.literal(rp)
-          .append(Text.literal("\n" + mcName)
-              .formatted(Formatting.GRAY, Formatting.ITALIC));
-      cir.setReturnValue(label);
+      cir.setReturnValue(Text.literal(rp));
     }
   }
 }

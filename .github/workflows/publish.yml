@@ -1,0 +1,62 @@
+# Publish du mod sur Modrinth et GitHub Releases lors d'un tag V*.
+name: publish
+
+on:
+  push:
+    tags:
+      - "V*"
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '21'
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Extract version from tag
+        id: ver
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#V}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Read Minecraft version from gradle.properties
+        id: mc
+        run: |
+          MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2-)
+          echo "minecraft_version=$MC" >> "$GITHUB_OUTPUT"
+
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
+
+      - name: Build and run all tests
+        run: |
+          ./gradlew build --no-daemon --stacktrace
+          xvfb-run ./gradlew runClientGameTest --no-daemon --stacktrace
+
+      - name: Publish to Modrinth and GitHub Releases
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ secrets.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-tag: ${{ github.ref_name }}
+          name: Roleplay chat ${{ steps.ver.outputs.version }}
+          version: ${{ steps.ver.outputs.version }}
+          version-type: release
+          loaders: fabric
+          game-versions: ${{ steps.mc.outputs.minecraft_version }}
+          java: '21'
+          files: build/libs/!(*-@(dev|sources|javadoc)).jar

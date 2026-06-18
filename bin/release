@@ -63,38 +63,13 @@ fi
 
 # ── Génération du CHANGELOG ─────────────────────────────────────────────────
 
-FEATURES=""
-FIXES=""
-DOCS=""
-OTHERS=""
-
-# Emojis internes exclus du CHANGELOG utilisateur
-INTERNAL_PATTERN="✅|👷|🔖|🚚|🖼️|🔧"
-
-while IFS= read -r subject; do
-  # Filtre les commits internes
-  if echo "$subject" | grep -qP "${INTERNAL_PATTERN}"; then
-    continue
-  fi
-  # Retire le préfixe "feat:" / "fix:" éventuel après l'emoji
-  entry=$(echo "$subject" | sed 's/^[^ ]* \(feat\|fix\|docs\|test\|chore\|refactor\): //')
-
-  case "$subject" in
-    *"✨"*) FEATURES+="- ${entry}"$'\n' ;;
-    *"🐛"*) FIXES+="- ${entry}"$'\n' ;;
-    *"📝"*) DOCS+="- ${entry}"$'\n' ;;
-    *)       OTHERS+="- ${entry}"$'\n' ;;
-  esac
-done < <(git log ${RANGE:+"$RANGE"} --pretty=format:"%s" --reverse)
-
 TODAY=$(date +%Y-%m-%d)
 
-NEW_SECTION="## [${NEW_VERSION}] - ${TODAY}"
+NEW_SECTION="## [${NEW_VERSION}] - ${TODAY}"$'\n'
 
-[[ -n "$FEATURES" ]] && NEW_SECTION+=$'\n\n### Nouveautés\n'"${FEATURES%$'\n'}"
-[[ -n "$FIXES" ]]    && NEW_SECTION+=$'\n\n### Corrections\n'"${FIXES%$'\n'}"
-[[ -n "$DOCS" ]]     && NEW_SECTION+=$'\n\n### Documentation\n'"${DOCS%$'\n'}"
-[[ -n "$OTHERS" ]]   && NEW_SECTION+=$'\n\n### Divers\n'"${OTHERS%$'\n'}"
+while IFS= read -r subject; do
+  NEW_SECTION+="- ${subject}"$'\n'
+done < <(git log ${RANGE:+"$RANGE"} --pretty=format:"%s" --reverse)
 
 CHANGELOG="CHANGELOG.md"
 

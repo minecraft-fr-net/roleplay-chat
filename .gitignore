@@ -20,7 +20,8 @@ classes/
 
 .settings/
 .vscode/
-bin/
+bin/*
+!bin/release.sh
 .classpath
 .project
 

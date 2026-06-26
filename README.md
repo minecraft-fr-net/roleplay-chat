@@ -96,3 +96,29 @@ Each message type is a JSON object with:
 ```
 
 Keys for all supported types: `speak`, `whisper`, `shout`, `action`, `ooc`, `globalOoc`, `support`, `roll`.
+
+## Nametag visibility
+
+The mod controls when other players' RP names appear above their heads:
+
+- **Behind a block** — if a solid block stands between your camera and another player, their nametag is hidden. In **Creative mode** the check is skipped, so you can always see nametags through walls.
+- **Wearing a concealing item** — if a player equips an item listed in the `roleplay-chat:conceals_identity` tag (helmet slot), their RP name and Minecraft username are hidden regardless of line of sight.
+
+### Adding items that conceal identity (server admins / datapack authors)
+
+Create the file `data/roleplay-chat/tags/items/conceals_identity.json` inside your datapack. List every item ID that should hide a player's nametag when worn as a helmet:
+
+```json
+{
+  "replace": false,
+  "values": [
+    "minecraft:leather_helmet",
+    "yourmod:hood",
+    "yourmod:balaclava"
+  ]
+}
+```
+
+> `"replace": false` means your list is **merged** with the mod's default list instead of replacing it.
+
+The mod ships with `minecraft:leather_helmet` as a default example. Remove it from your own tag entry (or use `"replace": true`) if you don't want it.

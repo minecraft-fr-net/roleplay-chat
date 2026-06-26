@@ -14,6 +14,7 @@ import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 
@@ -125,10 +126,16 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 mock.setPitch(0.0f);
             });
 
-            context.waitTicks(20);
-
-            // Simuler le mode Creative côté client directement
-            context.runOnClient(mc -> mc.player.getAbilities().creativeMode = true);
+            // Passer en Creative via le serveur pour que le HUD et les abilities soient corrects
+            // Les mock players ont des UUIDs cafebabe-*, le joueur local a un UUID différent
+            sp.getServer().runOnServer(server ->
+                server.getPlayerManager().getPlayerList().stream()
+                    .filter(p -> !p.getUuidAsString().startsWith("cafebabe"))
+                    .findFirst()
+                    .ifPresent(p -> p.changeGameMode(GameMode.CREATIVE))
+            );
+            // Attendre que le mode Creative soit effectivement appliqué côté client
+            context.waitFor(mc -> mc.player.getAbilities().creativeMode);
 
             context.runOnClient(mc -> RpNameClientCache.set(UUID_CREATIVE, "Elara"));
             context.waitTicks(5);

@@ -26,12 +26,14 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
     private static final int VIEWPORT_HEIGHT = 480;
     private static final UUID UUID_OCCLUDED    = UUID.fromString("cafebabe-0000-0000-0000-000000000003");
     private static final UUID UUID_NO_WALL     = UUID.fromString("cafebabe-0000-0000-0000-000000000004");
+    private static final UUID UUID_CREATIVE    = UUID.fromString("cafebabe-0000-0000-0000-000000000005");
 
     @Override
     public void runTest(ClientGameTestContext context) {
         context.getInput().resizeWindow(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         testNameplateHiddenBehindWall(context);
         testNameplateVisibleWithoutWall(context);
+        testNameplateVisibleThroughWallInCreative(context);
     }
 
     private static void testNameplateVisibleWithoutWall(ClientGameTestContext context) {
@@ -74,6 +76,66 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
             context.assertScreenshotEquals("nameplate_visible_no_wall");
+        }
+    }
+
+    private static void testNameplateVisibleThroughWallInCreative(ClientGameTestContext context) {
+        try (TestSingleplayerContext sp = context.worldBuilder().create()) {
+            double[] localPos = new double[3];
+
+            context.waitFor(mc -> mc.player != null && mc.player.getY() != 0);
+            context.runOnClient(mc -> {
+                localPos[0] = mc.player.getX();
+                localPos[1] = mc.player.getY();
+                localPos[2] = mc.player.getZ();
+                mc.options.setPerspective(Perspective.FIRST_PERSON);
+                mc.player.setYaw(0.0f);
+                mc.player.setPitch(-20.0f);
+            });
+
+            sp.getServer().runOnServer(server -> {
+                var world = server.getOverworld();
+
+                world.setTimeOfDay(6000L);
+                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
+                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.resetWeather();
+
+                // Même mur que le test d'occlusion
+                BlockPos wallBase = new BlockPos(
+                    (int) Math.floor(localPos[0]),
+                    (int) Math.floor(localPos[1]),
+                    (int) Math.floor(localPos[2]) + 1
+                );
+                BlockState stone = Blocks.STONE.getDefaultState();
+                for (int dx = -1; dx <= 1; dx++) {
+                    for (int dy = 0; dy <= 3; dy++) {
+                        world.setBlockState(wallBase.add(dx, dy, 0), stone);
+                    }
+                }
+
+                GameProfile profile = new GameProfile(UUID_CREATIVE, "WallCreative");
+                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
+                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
+                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                new EmbeddedChannel(connection);
+                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                mock.setPos(localPos[0], localPos[1], localPos[2] + 4.0);
+                mock.setYaw(180.0f);
+                mock.setPitch(0.0f);
+            });
+
+            context.waitTicks(20);
+
+            // Simuler le mode Creative côté client directement
+            context.runOnClient(mc -> mc.player.getAbilities().creativeMode = true);
+
+            context.runOnClient(mc -> RpNameClientCache.set(UUID_CREATIVE, "Elara"));
+            context.waitTicks(5);
+
+            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.waitTicks(2);
+            context.assertScreenshotEquals("nameplate_visible_creative_through_wall");
         }
     }
 

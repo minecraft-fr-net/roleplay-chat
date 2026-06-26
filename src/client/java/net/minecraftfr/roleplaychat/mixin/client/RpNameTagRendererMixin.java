@@ -45,6 +45,7 @@ public abstract class RpNameTagRendererMixin {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.gameRenderer == null || mc.world == null || mc.player == null) return;
         if (entity == mc.player) return;
+        if (mc.player.getAbilities().creativeMode) return;
 
         Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
         Vec3d eyePos = entity.getEyePos();

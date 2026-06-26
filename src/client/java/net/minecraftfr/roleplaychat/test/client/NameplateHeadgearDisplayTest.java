@@ -69,6 +69,16 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
             });
 
             context.waitTicks(20);
+
+            // L'équipement du mock player ne se propage pas via EmbeddedChannel —
+            // on le force directement sur l'entité côté client
+            context.runOnClient(mc -> {
+                var mockPlayer = mc.world.getPlayerByUuid(UUID_HEADGEAR);
+                if (mockPlayer != null) {
+                    mockPlayer.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+                }
+            });
+
             context.runOnClient(mc -> RpNameClientCache.set(UUID_HEADGEAR, "Elara"));
             context.waitTicks(5);
 

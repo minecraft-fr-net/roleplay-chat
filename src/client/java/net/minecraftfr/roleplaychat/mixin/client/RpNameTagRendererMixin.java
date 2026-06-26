@@ -9,7 +9,13 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
@@ -25,6 +31,9 @@ import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
  */
 @Mixin(PlayerEntityRenderer.class)
 public abstract class RpNameTagRendererMixin {
+
+    private static final TagKey<Item> CONCEALS_IDENTITY =
+        TagKey.of(RegistryKeys.ITEM, Identifier.of("roleplay-chat", "conceals_identity"));
 
     @Inject(
         method = "updateRenderState(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
@@ -59,6 +68,19 @@ public abstract class RpNameTagRendererMixin {
         ));
 
         if (hit.getType() == HitResult.Type.BLOCK) {
+            state.displayName = null;
+            state.nameLabelPos = null;
+            state.playerName = null;
+        }
+    }
+
+    @Inject(
+        method = "updateRenderState(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        at = @At("RETURN")
+    )
+    private void injectHeadgearOcclusion(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+        ItemStack head = entity.getEquippedStack(EquipmentSlot.HEAD);
+        if (!head.isEmpty() && head.isIn(CONCEALS_IDENTITY)) {
             state.displayName = null;
             state.nameLabelPos = null;
             state.playerName = null;

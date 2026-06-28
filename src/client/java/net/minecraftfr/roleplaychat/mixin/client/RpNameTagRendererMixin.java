@@ -79,6 +79,8 @@ public abstract class RpNameTagRendererMixin {
         at = @At("RETURN")
     )
     private void injectHeadgearOcclusion(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player == null || mc.player.getAbilities().creativeMode) return;
         ItemStack head = entity.getEquippedStack(EquipmentSlot.HEAD);
         if (!head.isEmpty() && head.isIn(CONCEALS_IDENTITY)) {
             state.displayName = null;

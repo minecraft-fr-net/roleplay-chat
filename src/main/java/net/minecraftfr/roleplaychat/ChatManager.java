@@ -58,6 +58,12 @@ public class ChatManager {
                                                          MessageType messageType, SignedMessage signedMessage) {
     int radius = messageType.getRadius();
 
+    String type = messageType.getClass().getSimpleName().replace("Message", "").toUpperCase();
+    String content = messageType.formatContentMessage(sender);
+    String mcName = sender.getName().getString();
+    int x = sender.getBlockX(), y = sender.getBlockY(), z = sender.getBlockZ();
+    RoleplayChat.LOGGER.info("[{}] {} (MC:{} @ {},{},{})", type, content, mcName, x, y, z);
+
     players.forEach(otherPlayer -> {
       int distance = (int) Math.round(sender.distanceTo(otherPlayer));
 

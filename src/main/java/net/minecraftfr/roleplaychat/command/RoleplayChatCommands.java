@@ -5,6 +5,7 @@ import java.util.List;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import net.minecraft.command.argument.EntityArgumentType;
 
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.command.CommandManager;
@@ -196,6 +197,47 @@ public class RoleplayChatCommands {
 
   static void registerRpNameCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
     dispatcher.register(CommandManager.literal("rpname")
+      .then(CommandManager.literal("set")
+        .requires(source -> source.hasPermissionLevel(2))
+        .then(CommandManager.argument("player", EntityArgumentType.player())
+          .then(CommandManager.argument("name", StringArgumentType.greedyString())
+            .executes(ctx -> {
+              String name = StringArgumentType.getString(ctx, "name").trim();
+              ServerPlayerEntity target = EntityArgumentType.getPlayer(ctx, "player");
+
+              if (name.isEmpty()) {
+                ctx.getSource().sendError(Text.literal("Le pseudo RP ne peut pas être vide."));
+                return 0;
+              }
+              if (name.length() > RP_NAME_MAX_LENGTH) {
+                ctx.getSource().sendError(Text.literal(
+                    "Le pseudo RP ne peut pas dépasser " + RP_NAME_MAX_LENGTH + " caractères."));
+                return 0;
+              }
+
+              var server = ctx.getSource().getServer();
+              RpNameStore store = RpNameStore.get(server);
+
+              if (store.isNameTaken(name, target.getUuid())) {
+                ctx.getSource().sendError(Text.literal(
+                    "Le pseudo « " + name + " » est déjà utilisé par un autre joueur."));
+                return 0;
+              }
+
+              store.setRpName(target.getUuid(), name);
+
+              RpNameUpdatePayload payload = new RpNameUpdatePayload(target.getUuid(), name);
+              server.getPlayerManager().getPlayerList().forEach(p ->
+                  ServerPlayNetworking.send(p, payload));
+
+              server.getPlayerManager().sendToAll(
+                  new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, target));
+
+              ctx.getSource().sendFeedback(
+                  () -> Text.literal("Pseudo RP de " + target.getName().getString() + " défini : " + name), true);
+              target.sendMessage(Text.literal("Votre pseudo RP a été défini en « " + name + " » par un administrateur."));
+              return 1;
+            }))))
       .then(CommandManager.argument("name", StringArgumentType.greedyString())
         .executes(ctx -> {
           String name = StringArgumentType.getString(ctx, "name").trim();

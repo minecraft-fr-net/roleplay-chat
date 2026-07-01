@@ -14,6 +14,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -27,7 +28,9 @@ import net.minecraftfr.roleplaychat.nameplate.RpNameTagHelper;
  * - Quand un pseudo RP est actif, affiche le code {@code #XXXXXX} en dessous (dans sa couleur hex)
  *   à la place du MC username. Quand seul le code est actif, rien n'est ajouté en dessous.
  * - Masque le nametag si un bloc bloque la ligne de vue.
- * - Masque le nametag si le joueur porte un item tagué {@code conceals_identity}.
+ * - Si le joueur porte un item tagué {@code conceals_identity} : cache le nom RP (affiche {@code ?})
+ *   mais conserve le code hex pour permettre les reports. Même si le joueur s'est déjà présenté,
+ *   son identité RP reste masquée tant qu'il porte l'item.
  */
 @Mixin(PlayerEntityRenderer.class)
 public abstract class RpNameTagRendererMixin {
@@ -80,10 +83,11 @@ public abstract class RpNameTagRendererMixin {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null || mc.player.getAbilities().creativeMode) return;
         ItemStack head = entity.getEquippedStack(EquipmentSlot.HEAD);
-        if (!head.isEmpty() && head.isIn(CONCEALS_IDENTITY)) {
-            state.displayName = null;
-            state.nameLabelPos = null;
-            state.playerName = null;
-        }
+        if (head.isEmpty() || !head.isIn(CONCEALS_IDENTITY)) return;
+        // Déjà caché par l'occlusion de vue (mur devant) — ne rien afficher du tout.
+        if (state.nameLabelPos == null) return;
+        // Cache le nom RP (même si déjà présenté) mais conserve le code hex pour les reports.
+        state.displayName = Text.literal("?").styled(s -> s.withColor(Formatting.WHITE));
+        // state.playerName conserve le code hex défini par injectRpPlayerName.
     }
 }

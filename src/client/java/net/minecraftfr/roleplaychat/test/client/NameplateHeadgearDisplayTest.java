@@ -16,7 +16,9 @@ import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
+import net.minecraftfr.roleplaychat.nameplate.RpNameRevealedCache;
 
 import java.util.UUID;
 
@@ -143,8 +145,13 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 }
             });
 
-            context.runOnClient(mc -> RpNameClientCache.set(UUID_HEADGEAR, "Elara"));
-            context.waitTicks(5);
+            // Simuler une présentation préalable : le joueur s'est présenté, mais la cagoule
+            // doit quand même cacher son nom RP et ne montrer que "?" + code hex.
+            context.runOnClient(mc -> {
+                PlayerCodeClientCache.set(UUID_HEADGEAR, "#DDDDDD");
+                RpNameClientCache.set(UUID_HEADGEAR, "Elara");
+                RpNameRevealedCache.add(UUID_HEADGEAR);
+            });
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);

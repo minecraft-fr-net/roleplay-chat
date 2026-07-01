@@ -1,6 +1,7 @@
 package net.minecraftfr.roleplaychat.command;
 
 import java.util.List;
+import java.util.UUID;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -22,13 +23,17 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.SpeakMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.SupportMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.WhisperMessage;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
+import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
+import net.minecraftfr.roleplaychat.nameplate.RpNameRevealPayload;
 import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
 import net.minecraftfr.roleplaychat.nameplate.RpNameUpdatePayload;
+import net.minecraftfr.roleplaychat.nameplate.RpNameVisibilityStore;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 
 public class RoleplayChatCommands {
   public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
     registerRpNameCommand(dispatcher);
+    registerRpPresentCommand(dispatcher);
 
     dispatcher.register(CommandManager.literal("roleplaychat")
       .requires(CommandManager.requirePermissionLevel(4))
@@ -186,6 +191,58 @@ public class RoleplayChatCommands {
     List<ServerPlayerEntity> players = ctx.getSource().getServer().getPlayerManager().getPlayerList();
     ChatManager.sendMessageToPlayerListFromPosition(sender, players, roll, null);
     return 1;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Commande /rp present
+  // ---------------------------------------------------------------------------
+
+  static void registerRpPresentCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
+    dispatcher.register(CommandManager.literal("rp")
+      .then(CommandManager.literal("present")
+        .then(CommandManager.argument("hex", StringArgumentType.word())
+          .executes(ctx -> {
+            ServerPlayerEntity sender = ctx.getSource().getPlayer();
+            if (sender == null) return 0;
+            String hex = StringArgumentType.getString(ctx, "hex").toUpperCase();
+
+            var server = ctx.getSource().getServer();
+            RpNameStore rpStore = RpNameStore.get(server);
+            PlayerCodeStore codeStore = PlayerCodeStore.get(server);
+
+            String senderRp = rpStore.getRpName(sender.getUuid()).orElse(null);
+            if (senderRp == null) {
+              ctx.getSource().sendError(Text.literal(
+                  "Vous n'avez pas de pseudo RP. Utilisez /rpname pour en définir un."));
+              return 0;
+            }
+
+            UUID targetUuid = codeStore.getUuidByCode(hex);
+            if (targetUuid == null) {
+              ctx.getSource().sendError(Text.literal("Joueur introuvable : " + hex));
+              return 0;
+            }
+            if (targetUuid.equals(sender.getUuid())) {
+              ctx.getSource().sendError(Text.literal(
+                  "Vous ne pouvez pas vous présenter à vous-même."));
+              return 0;
+            }
+
+            RpNameVisibilityStore visibilityStore = RpNameVisibilityStore.get(server);
+            visibilityStore.addVisibility(targetUuid, sender.getUuid());
+
+            ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetUuid);
+            if (target != null) {
+              ServerPlayNetworking.send(target, new RpNameRevealPayload(sender.getUuid()));
+              String senderCode = codeStore.getCode(sender.getUuid()).orElse("?");
+              target.sendMessage(Text.literal(
+                  senderRp + " (" + senderCode + ") s'est présenté à vous."), false);
+            }
+
+            ctx.getSource().sendFeedback(
+                () -> Text.literal("Vous vous êtes présenté à " + hex + "."), false);
+            return 1;
+          }))));
   }
 
   // ---------------------------------------------------------------------------

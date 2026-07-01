@@ -60,7 +60,7 @@ public class RollMessage extends MessageType {
   @Override
   public String formatContentMessage(ServerPlayerEntity player) {
     int total = roll + bonus;
-    String name = player.getName().getString();
+    String name = getPlayerDisplayName(player);
     // Notation affichée : « 1d20+3 » ou « 1d20 » si pas de bonus
     StringBuilder notation = new StringBuilder("1d").append(sides);
     if (bonus > 0) notation.append("+").append(bonus);

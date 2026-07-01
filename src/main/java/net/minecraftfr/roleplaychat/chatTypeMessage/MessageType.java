@@ -58,16 +58,17 @@ public abstract class MessageType {
     MutableText nameSegment = Text.literal(getChatName(player))
         .styled(style -> style.withColor(textColor));
 
-    // Hover MC username si le joueur a un pseudo RP
+    // Hover code hexadécimal quand le joueur a un pseudo RP (le code n'est pas visible dans le message)
     net.minecraft.server.MinecraftServer server = player.getServer();
     if (server != null) {
       String rpName = net.minecraftfr.roleplaychat.nameplate.RpNameStore
           .get(server).getRpName(player.getUuid()).orElse(null);
       if (rpName != null) {
-        String mcName = player.getName().getString();
-        nameSegment.styled(style ->
-            style.withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(
-                Text.literal(mcName))));
+        net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore.get(server)
+            .getCode(player.getUuid())
+            .ifPresent(code -> nameSegment.styled(style ->
+                style.withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(
+                    Text.literal(code)))));
       }
     }
 
@@ -153,19 +154,25 @@ public abstract class MessageType {
     this.distance = distance;
   }
 
-  /*
-   * Return the name of the player for the chat
-   * Example : <Jeb_>
-   */
-  protected String getChatName(ServerPlayerEntity player) {
+  /** Résout le nom visible du joueur : pseudo RP → code hex → username MC. */
+  protected String getPlayerDisplayName(ServerPlayerEntity player) {
     net.minecraft.server.MinecraftServer server = player.getServer();
     if (server != null) {
       java.util.Optional<String> rp =
           net.minecraftfr.roleplaychat.nameplate.RpNameStore.get(server)
               .getRpName(player.getUuid());
-      if (rp.isPresent()) return "<" + rp.get() + ">";
+      if (rp.isPresent()) return rp.get();
+      java.util.Optional<String> code =
+          net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore.get(server)
+              .getCode(player.getUuid());
+      if (code.isPresent()) return code.get();
     }
-    return "<" + player.getName().getString() + ">";
+    return player.getName().getString();
+  }
+
+  /** Retourne le nom du joueur encadré de chevrons, ex. {@code <Elara>}. */
+  protected String getChatName(ServerPlayerEntity player) {
+    return "<" + getPlayerDisplayName(player) + ">";
   }
 
   protected int getDistance() {

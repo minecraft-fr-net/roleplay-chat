@@ -5,24 +5,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
+import net.minecraftfr.roleplaychat.nameplate.RpNameTagHelper;
 
 /**
- * Surcharge {@code getDisplayName()} côté client pour afficher le pseudo RP
- * dans le nametag au-dessus de la tête du joueur.
- *
- * <p>Format affiché :
- * <pre>
- *   Elara          ← pseudo RP (blanc, taille normale)
- *   DevPlayer      ← username Minecraft (gris italique, pour la modération)
- * </pre>
- *
- * <p>La méthode est déclarée dans {@link PlayerEntity} (pas dans
- * {@code AbstractClientPlayerEntity}), donc on cible {@code PlayerEntity}
- * avec un guard pour ne s'appliquer qu'aux joueurs clients.
+ * Surcharge {@code getDisplayName()} côté client pour contrôler l'affichage
+ * du nametag. Délègue la logique à {@link RpNameTagHelper}.
  */
 @Mixin(PlayerEntity.class)
 public abstract class RpNameTagMixin {
@@ -30,9 +21,9 @@ public abstract class RpNameTagMixin {
   @Inject(method = "getDisplayName", at = @At("RETURN"), cancellable = true)
   private void injectRpDisplayName(CallbackInfoReturnable<Text> cir) {
     if (!((Object) this instanceof AbstractClientPlayerEntity self)) return;
-    String rp = RpNameClientCache.get(self.getUuid());
-    if (rp != null) {
-      cir.setReturnValue(Text.literal(rp));
-    }
+    MinecraftClient mc = MinecraftClient.getInstance();
+    boolean creative = mc.player != null && mc.player.getAbilities().creativeMode;
+    Text label = RpNameTagHelper.getDisplayName(self.getUuid(), creative);
+    if (label != null) cir.setReturnValue(label);
   }
 }

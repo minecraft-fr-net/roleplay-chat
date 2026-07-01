@@ -23,4 +23,8 @@ public final class RpNameClientCache {
   public static @Nullable String get(UUID uuid) {
     return NAMES.get(uuid);
   }
+
+  public static void clear() {
+    NAMES.clear();
+  }
 }

@@ -12,7 +12,9 @@ import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameRules;
+import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
+import net.minecraftfr.roleplaychat.nameplate.RpNameRevealedCache;
 
 import java.util.UUID;
 
@@ -23,21 +25,27 @@ public class NameplateDisplayTest implements FabricClientGameTest {
     private static final int VIEWPORT_HEIGHT = 480;
 
     // UUIDs fixes pour skins déterministes entre les runs (Steve par défaut car hashCode pair)
-    private static final UUID UUID_WITH_RP   = UUID.fromString("cafebabe-0000-0000-0000-000000000001");
+    private static final UUID UUID_WITH_RP    = UUID.fromString("cafebabe-0000-0000-0000-000000000001");
     private static final UUID UUID_WITHOUT_RP = UUID.fromString("cafebabe-0000-0000-0000-000000000002");
+    private static final UUID UUID_UNKNOWN    = UUID.fromString("cafebabe-0000-0000-0000-000000000003");
 
     @Override
     public void runTest(ClientGameTestContext context) {
         context.getInput().resizeWindow(VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         testNameplateWithRpName(context);
         testNameplateWithoutRpName(context);
+        testNameplateUnknownPlayer(context);
     }
 
     private static void testNameplateWithRpName(ClientGameTestContext context) {
         try (TestSingleplayerContext sp = context.worldBuilder().create()) {
             spawnMockPlayerInFront(sp, context, "MockPlayer", UUID_WITH_RP);
-            context.runOnClient(mc -> RpNameClientCache.set(UUID_WITH_RP, "Elara"));
-            context.waitTicks(5);
+            // Attendre que tous les paquets JOIN soient traités, puis écraser avec des valeurs fixes
+            context.runOnClient(mc -> {
+                PlayerCodeClientCache.set(UUID_WITH_RP, "#AAAAAA");
+                RpNameClientCache.set(UUID_WITH_RP, "Elara");
+                RpNameRevealedCache.add(UUID_WITH_RP);
+            });
             takeCleanScreenshot(context, "nameplate_with_rp_name");
         }
     }
@@ -45,7 +53,25 @@ public class NameplateDisplayTest implements FabricClientGameTest {
     private static void testNameplateWithoutRpName(ClientGameTestContext context) {
         try (TestSingleplayerContext sp = context.worldBuilder().create()) {
             spawnMockPlayerInFront(sp, context, "MockPlayer", UUID_WITHOUT_RP);
+            // Code connu mais pas de nom RP → affiche "?" + code
+            context.runOnClient(mc -> {
+                PlayerCodeClientCache.set(UUID_WITHOUT_RP, "#CCCCCC");
+                RpNameClientCache.clear();
+            });
             takeCleanScreenshot(context, "nameplate_without_rp_name");
+        }
+    }
+
+    private static void testNameplateUnknownPlayer(ClientGameTestContext context) {
+        try (TestSingleplayerContext sp = context.worldBuilder().create()) {
+            spawnMockPlayerInFront(sp, context, "UnknownPlayer", UUID_UNKNOWN);
+            // Code connu + nom RP connu mais pas révélé → affiche "?" + code
+            context.runOnClient(mc -> {
+                PlayerCodeClientCache.set(UUID_UNKNOWN, "#BBBBBB");
+                RpNameClientCache.set(UUID_UNKNOWN, "Elrich");
+                // Pas de RpNameRevealedCache.add() → le nom RP reste masqué
+            });
+            takeCleanScreenshot(context, "nameplate_unknown_player");
         }
     }
 

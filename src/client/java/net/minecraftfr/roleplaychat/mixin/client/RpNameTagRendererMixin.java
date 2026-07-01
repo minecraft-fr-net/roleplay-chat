@@ -14,20 +14,20 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
+import net.minecraft.text.Text;
+import net.minecraftfr.roleplaychat.nameplate.RpNameTagHelper;
 
 /**
- * Quand un pseudo RP est actif, injecte le MC username dans {@code state.playerName}
- * pour qu'il apparaisse en dessous du pseudo RP dans le nametag.
- *
- * <p>Le {@code PlayerEntityRenderer} rend {@code state.playerName} en bas,
- * puis translate vers le haut et rend le label principal ({@code getDisplayName()}) au-dessus.
+ * Gestion avancée du nametag :
+ * - Quand un pseudo RP est actif, affiche le code {@code #XXXXXX} en dessous (dans sa couleur hex)
+ *   à la place du MC username. Quand seul le code est actif, rien n'est ajouté en dessous.
+ * - Masque le nametag si un bloc bloque la ligne de vue.
+ * - Masque le nametag si le joueur porte un item tagué {@code conceals_identity}.
  */
 @Mixin(PlayerEntityRenderer.class)
 public abstract class RpNameTagRendererMixin {
@@ -40,10 +40,8 @@ public abstract class RpNameTagRendererMixin {
         at = @At("RETURN")
     )
     private void injectRpPlayerName(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
-        String rp = RpNameClientCache.get(entity.getUuid());
-        if (rp != null) {
-            state.playerName = entity.getName().copy().formatted(Formatting.GRAY, Formatting.ITALIC);
-        }
+        Text hex = RpNameTagHelper.getHexLabel(entity.getUuid());
+        if (hex != null) state.playerName = hex;
     }
 
     @Inject(

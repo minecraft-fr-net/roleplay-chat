@@ -2,5 +2,11 @@
   "roleplay-chat.chat_type.roleplay": "%s",
   "roleplay-chat.chat_type.signed_roleplay": "%s",
   "roleplay-chat.roll.critical_success": "(Critical Success)",
-  "roleplay-chat.roll.critical_failure": "(Critical Failure)"
+  "roleplay-chat.roll.critical_failure": "(Critical Failure)",
+  "screen.roleplay-chat.rp_name_input.title": "Choose your RP name",
+  "screen.roleplay-chat.rp_name_input.label": "RP Name",
+  "screen.roleplay-chat.rp_name_input.confirm": "Confirm",
+  "screen.roleplay-chat.rp_name_input.error.empty": "RP name cannot be empty.",
+  "screen.roleplay-chat.rp_name_input.error.too_long": "RP name cannot exceed 32 characters.",
+  "screen.roleplay-chat.rp_name_input.error.taken": "The name \"%s\" is already taken."
 }

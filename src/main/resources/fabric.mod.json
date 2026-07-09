@@ -31,7 +31,8 @@
 			"net.minecraftfr.roleplaychat.test.client.RpNameDisplayTest",
 			"net.minecraftfr.roleplaychat.test.client.NameplateDisplayTest",
 			"net.minecraftfr.roleplaychat.test.client.NameplateOcclusionDisplayTest",
-			"net.minecraftfr.roleplaychat.test.client.NameplateHeadgearDisplayTest"
+			"net.minecraftfr.roleplaychat.test.client.NameplateHeadgearDisplayTest",
+			"net.minecraftfr.roleplaychat.test.client.RpNameInputScreenTest"
 		]
 	},
 	"mixins": [

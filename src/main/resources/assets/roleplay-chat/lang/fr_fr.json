@@ -2,5 +2,11 @@
   "roleplay-chat.chat_type.roleplay": "%s",
   "roleplay-chat.chat_type.signed_roleplay": "%s",
   "roleplay-chat.roll.critical_success": "(Réussite Critique)",
-  "roleplay-chat.roll.critical_failure": "(Échec Critique)"
+  "roleplay-chat.roll.critical_failure": "(Échec Critique)",
+  "screen.roleplay-chat.rp_name_input.title": "Choisissez votre pseudo RP",
+  "screen.roleplay-chat.rp_name_input.label": "Pseudo RP",
+  "screen.roleplay-chat.rp_name_input.confirm": "Confirmer",
+  "screen.roleplay-chat.rp_name_input.error.empty": "Le pseudo RP ne peut pas être vide.",
+  "screen.roleplay-chat.rp_name_input.error.too_long": "Le pseudo RP ne peut pas dépasser 32 caractères.",
+  "screen.roleplay-chat.rp_name_input.error.taken": "Le pseudo « %s » est déjà utilisé par un autre joueur."
 }

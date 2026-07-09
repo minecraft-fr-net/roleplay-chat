@@ -6,10 +6,14 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraftfr.roleplaychat.command.RoleplayChatCommands;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
+import net.minecraftfr.roleplaychat.nameplate.OpenRpNameScreenPayload;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeUpdatePayload;
+import net.minecraftfr.roleplaychat.nameplate.RpNameInputPayload;
 import net.minecraftfr.roleplaychat.nameplate.RpNameRevealPayload;
 import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
 import net.minecraftfr.roleplaychat.nameplate.RpNameUpdatePayload;
@@ -32,6 +36,36 @@ public class RoleplayChat implements ModInitializer {
     PayloadTypeRegistry.playS2C().register(RpNameUpdatePayload.ID, RpNameUpdatePayload.CODEC);
     PayloadTypeRegistry.playS2C().register(PlayerCodeUpdatePayload.ID, PlayerCodeUpdatePayload.CODEC);
     PayloadTypeRegistry.playS2C().register(RpNameRevealPayload.ID, RpNameRevealPayload.CODEC);
+    PayloadTypeRegistry.playS2C().register(OpenRpNameScreenPayload.ID, OpenRpNameScreenPayload.CODEC);
+    // Enregistrer les payloads réseau C2S
+    PayloadTypeRegistry.playC2S().register(RpNameInputPayload.ID, RpNameInputPayload.CODEC);
+
+    // Traiter la saisie du pseudo RP depuis l'écran de connexion
+    ServerPlayNetworking.registerGlobalReceiver(RpNameInputPayload.ID, (payload, ctx) -> {
+      String name = payload.name().trim();
+      ServerPlayerEntity player = ctx.player();
+      RpNameStore store = RpNameStore.get(ctx.server());
+
+      if (name.isEmpty()) {
+        ServerPlayNetworking.send(player, new OpenRpNameScreenPayload("screen.roleplay-chat.rp_name_input.error.empty", ""));
+        return;
+      }
+      if (name.length() > 32) {
+        ServerPlayNetworking.send(player, new OpenRpNameScreenPayload("screen.roleplay-chat.rp_name_input.error.too_long", ""));
+        return;
+      }
+      if (store.isNameTaken(name, player.getUuid())) {
+        ServerPlayNetworking.send(player, new OpenRpNameScreenPayload("screen.roleplay-chat.rp_name_input.error.taken", name));
+        return;
+      }
+
+      store.setRpName(player.getUuid(), name);
+      RpNameUpdatePayload rpPayload = new RpNameUpdatePayload(player.getUuid(), name);
+      ctx.server().getPlayerManager().getPlayerList().forEach(p ->
+          ServerPlayNetworking.send(p, rpPayload));
+      ctx.server().getPlayerManager().sendToAll(
+          new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, player));
+    });
 
     ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, typeKey) -> {
       return chatManager.handleChatMessage(sender, message.getContent().getString(), message);
@@ -67,6 +101,11 @@ public class RoleplayChat implements ModInitializer {
       // Synchroniser tous les codes existants vers le joueur qui se connecte
       codeStore.getAll().forEach((uuid, code) ->
           ServerPlayNetworking.send(handler.player, new PlayerCodeUpdatePayload(uuid, code)));
+
+      // Ouvrir l'écran de saisie si le joueur n'a pas encore de pseudo RP
+      if (rpStore.getRpName(handler.player.getUuid()).isEmpty()) {
+        ServerPlayNetworking.send(handler.player, new OpenRpNameScreenPayload("", ""));
+      }
     });
   }
 }

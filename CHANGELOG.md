@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.1.0+1.21.6] - 2026-07-10
+- 🐛 Corriger le script release : supprimer le filtrage des commits
+- ✨ Masquer le nametag des joueurs derrière les blocs
+- ✨ Afficher les nametags à travers les murs en mode Creative
+- 🐛 Corriger le mode Creative dans le test de nametag
+- ✨ Cacher le pseudo RP avec un item de type capuche/cagoule
+- 📝 Documenter la visibilité des nametags et le tag conceals_identity
+- 🐛 Corriger le tag conceals_identity et la synchro équipement du test
+- ✨ Cacher le pseudo RP avec un item de type capuche/cagoule
+- ✨ Système de présentation RP — visibilité unidirectionnelle des noms RP
+- ✨ Code hexadécimal — identifiant anonyme en tab/chat/nametag à la place du pseudo MC
+- ✨ Écran de saisie du pseudo RP à la première connexion
+- 🐛 Empêcher la fermeture de l'écran RP via Echap
+- 📝 Documenter toutes les fonctionnalités dans le README
+
+
 ## [2.0.0+1.21.6] - 2026-06-18
 
 ### Nouveautés

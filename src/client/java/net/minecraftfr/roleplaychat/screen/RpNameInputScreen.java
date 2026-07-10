@@ -2,13 +2,17 @@ package net.minecraftfr.roleplaychat.screen;
 
 import org.jetbrains.annotations.Nullable;
 
+import org.lwjgl.glfw.GLFW;
+
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
+import net.minecraftfr.roleplaychat.RoleplayChatClient;
 import net.minecraftfr.roleplaychat.nameplate.RpNameInputPayload;
 
 public class RpNameInputScreen extends Screen {
@@ -119,7 +123,11 @@ public class RpNameInputScreen extends Screen {
 
   @Override
   public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-    if (keyCode == 257 && confirmButton.active) {
+    if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+      if (this.client != null) this.client.setScreen(new GameMenuScreen(true));
+      return true;
+    }
+    if (keyCode == GLFW.GLFW_KEY_ENTER && confirmButton.active) {
       submit();
       return true;
     }
@@ -128,12 +136,13 @@ public class RpNameInputScreen extends Screen {
 
   @Override
   public boolean shouldCloseOnEsc() {
-    return true;
+    return false;
   }
 
   private void submit() {
     String name = nameField.getText().trim();
     if (name.isEmpty()) return;
+    RoleplayChatClient.clearNeedsRpName();
     ClientPlayNetworking.send(new RpNameInputPayload(name));
     this.close();
   }

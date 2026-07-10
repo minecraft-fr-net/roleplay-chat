@@ -75,11 +75,13 @@ CHANGELOG="CHANGELOG.md"
 
 if [[ -f "$CHANGELOG" ]]; then
   TMP=$(mktemp)
-  # Insère la nouvelle section après la ligne d'en-tête (# Changelog)
-  awk -v section="${NEW_SECTION}" '
-    NR == 1 { print; print ""; print section; print ""; next }
-    { print }
-  ' "$CHANGELOG" > "$TMP"
+  {
+    head -1 "$CHANGELOG"
+    echo ""
+    printf '%s' "${NEW_SECTION}"
+    echo ""
+    tail -n +2 "$CHANGELOG"
+  } > "$TMP"
   mv "$TMP" "$CHANGELOG"
 else
   printf '# Changelog\n\n%s\n' "${NEW_SECTION}" > "$CHANGELOG"

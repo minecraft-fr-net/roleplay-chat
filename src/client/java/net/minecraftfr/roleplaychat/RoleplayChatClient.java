@@ -19,6 +19,12 @@ public class RoleplayChatClient implements ClientModInitializer {
 
 	// Payload en attente d'ouverture de l'écran RP (null = pas d'écran à ouvrir)
 	private static @Nullable OpenRpNameScreenPayload pendingRpNameScreen = null;
+	// True tant que le joueur n'a pas validé un nom RP (survit au menu pause)
+	private static boolean needsRpName = false;
+
+	public static void clearNeedsRpName() {
+		needsRpName = false;
+	}
 
 	@Override
 	public void onInitializeClient() {
@@ -33,21 +39,29 @@ public class RoleplayChatClient implements ClientModInitializer {
 				(payload, ctx) -> RpNameRevealedCache.add(payload.presenterUuid()));
 		// Planifier l'ouverture de l'écran RP : différé au premier tick en jeu pour ne pas
 		// interrompre le DownloadingTerrainScreen pendant le chargement du monde
-		ClientPlayNetworking.registerGlobalReceiver(OpenRpNameScreenPayload.ID,
-				(payload, ctx) -> pendingRpNameScreen = payload);
+		ClientPlayNetworking.registerGlobalReceiver(OpenRpNameScreenPayload.ID, (payload, ctx) -> {
+			pendingRpNameScreen = payload;
+			needsRpName = true;
+		});
 		// Ouvrir l'écran dès que le joueur est en jeu (aucun écran de chargement ouvert).
 		// Désactivé en mode gametest : les tests ouvrent l'écran directement via setScreen().
 		if (System.getProperty("fabric.client.gametest") == null) {
 			ClientTickEvents.END_CLIENT_TICK.register(client -> {
-				if (pendingRpNameScreen != null && client.currentScreen == null && client.player != null) {
-					client.setScreen(new RpNameInputScreen(pendingRpNameScreen.errorKey(), pendingRpNameScreen.errorArg()));
-					pendingRpNameScreen = null;
+				if (client.currentScreen == null && client.player != null) {
+					if (pendingRpNameScreen != null) {
+						client.setScreen(new RpNameInputScreen(pendingRpNameScreen.errorKey(), pendingRpNameScreen.errorArg()));
+						pendingRpNameScreen = null;
+					} else if (needsRpName) {
+						// Le joueur est revenu au jeu depuis le menu pause sans avoir validé
+						client.setScreen(new RpNameInputScreen("", ""));
+					}
 				}
 			});
 		}
 		// Réinitialiser tous les caches à la déconnexion (évite la pollution entre serveurs et tests)
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
 			pendingRpNameScreen = null;
+			needsRpName = false;
 			RpNameRevealedCache.clear();
 			RpNameClientCache.clear();
 			PlayerCodeClientCache.clear();

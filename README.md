@@ -1,113 +1,158 @@
 # Roleplay Chat
 
-This mod allows players to communicate in a roleplay (RP) setting with different ranges for various types of messages. The goal is to enhance RP immersion by limiting how far messages can be seen based on their type.
+A Minecraft Fabric mod (1.21.6) for roleplay servers. It replaces the vanilla chat with a proximity-based system, assigns each player an anonymous hex code identity, and gives them an RP name visible only to players they've been introduced to.
 
-## How It Works
+---
 
-Messages are triggered by a special character placed at the start of your message. For example, `!Hello` will shout "Hello" (range of 80 blocks).
+## Proximity Chat
 
-When speaking in the chat, **your message will NOT be visible across the entire server**. If no player is within your message’s range, you won’t get a response! Check the table below to understand how the system works.
+Every chat message is delivered only to players within a configured range. The range depends on the type of message, triggered by a prefix character or a slash command.
 
-This approach is designed to foster RP and local interactions between players.
+| Type | Color | Range | Prefix | Command |
+|------|-------|-------|--------|---------|
+| Whisper | 🟪 Violet `#CC33CC` | 4 blocks | `«` or `"` | `/whisper <message>` |
+| Action | 🟩 Green `#33CC33` | 25 blocks | `*` | `/action <message>` |
+| Roll | 🟩 Green `#33CC33` | 25 blocks | — | `/roll [notation]` |
+| Speak | ⬜ White `#FFFFFF` | 30 blocks | _(default)_ | `/speak <message>` |
+| OOC | 🩶 Gray `#AEC1D5` | 60 blocks | `(` | `/ooc <message>` |
+| Shout | 🟥 Red `#CC3300` | 80 blocks | `!` | `/shout <message>` |
+| Global OOC | 🩶 Gray `#AEC1D5` | Unlimited | `[` | `/globalOoc <message>` |
+| Support | 🩷 Pink `#FF99CC` | Unlimited | `?` | `/support <message>` |
 
-Default colors, ranges, and prefix characters match the tables below; server admins can override them in **`config/roleplay-chat.json`** (see [Configuration](#configuration-server-admins)).
+> **Support** messages are only visible to server operators (permission level ≥ 2) and the sender.
 
-| **TYPE**  | **COLOR**        | **RANGE**  | **TRIGGER CHARACTER** | **TRIGGER COMMAND**   | **DESCRIPTION**       |
-|-----------|------------------|------------|-----------------------|-----------------------|-----------------------|
-| Whisper   | 🟪 Violet (#CC33CC) | 4 blocks   | `«` or `"` (configurable) | `/whisper <message>`  | Speak quietly to someone nearby             |
-| Action    | 🟩 Green (#3C3)  | 25 blocks  | `*`                   | `/action <message>`   | Describe an action you're performing (like `/me`) |
-| Roll      | 🟩 Green (#3C3)  | 25 blocks  | None                  | `/roll 1d20+3`        | Roll a die and show the result to nearby players  |
-| Speak     | ⬜️ White (#FFF)  | 30 blocks  | None                  | `/speak <message>`    | Normal conversation                         |
-| Shout     | 🟥 Red (#C30)    | 80 blocks  | `!`                   | `/shout <message>`    | Shout, for example, before attacking!       |
+Colors, ranges, and prefix characters are all configurable — see [Configuration](#configuration-server-admins).
 
-### Dice Roll Command
+### Color fade with distance
 
-The `/roll` command simulates a dice roll and broadcasts the result to nearby players (same range as Action, 25 blocks by default).
+Messages fade toward black as the receiver moves away from the sender, reaching full black at maximum range. Players outside range receive nothing.
 
-**Syntax:** `/roll <dés>` — ex : `d20`, `1d20+3`, `d6-1`
+![Speak radius display](src/client/resources/templates/speak_radius_display.png)
 
-| Example | Result |
-|---------|--------|
-| `/roll` | Rolls a d20 (default) |
-| `/roll d6` | Rolls a d6 |
-| `/roll 1d20+3` | Rolls a d20 and adds 3 |
-| `/roll d8-1` | Rolls a d8 and subtracts 1 |
+### Chat message examples
 
-**Notation format:** `[N]d<faces>[+/-bonus]` — the count prefix (`1d`, `2d`, …) is optional and only one die is always rolled.
+<table>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/chat_speak.png" alt="Speak"><br><sub>Speak</sub></td>
+  <td align="center"><img src="src/client/resources/templates/chat_whisper.png" alt="Whisper"><br><sub>Whisper</sub></td>
+  <td align="center"><img src="src/client/resources/templates/chat_shout.png" alt="Shout"><br><sub>Shout</sub></td>
+</tr>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/chat_action.png" alt="Action"><br><sub>Action</sub></td>
+  <td align="center"><img src="src/client/resources/templates/chat_ooc.png" alt="OOC"><br><sub>OOC</sub></td>
+  <td align="center"><img src="src/client/resources/templates/chat_global_ooc.png" alt="Global OOC"><br><sub>Global OOC</sub></td>
+</tr>
+</table>
 
-**Display example:**
+### Dice Roll
+
+`/roll` broadcasts a dice result to nearby players (same range as Action, 25 blocks by default).
+
+**Syntax:** `/roll [NdF[±bonus]]`
+
+| Example | Meaning |
+|---------|---------|
+| `/roll` | Rolls 1d20 (default) |
+| `/roll d6` | Rolls 1d6 |
+| `/roll 1d20+3` | Rolls 1d20, adds 3 |
+| `/roll d8-1` | Rolls 1d8, subtracts 1 |
+
 ```
 * Alice [1d20+3] → 17  (14+3)
-* Bob [1d6] → 4
+* Bob [1d6] → 4  (Critical Failure)
 ```
 
-## Additional Commands (Optional)
-These commands are for **Out of Character (OOC)** interactions. Use them sparingly! Thank you.
+Rolling the maximum value shows **(Critical Success)** in bold; rolling 1 shows **(Critical Failure)** in bold.
 
-| **TYPE**             | **COLOR**       | **RANGE** | **TRIGGER CHARACTER** | **TRIGGER COMMAND**     | **DESCRIPTION**            |
-|----------------------|-----------------|-----------|-----------------------|-------------------------|----------------------------|
-| Support              | Pink (#FF99CC)     | Unlimited | `?` (configurable)    | `/support <message>`    | Request help from staff (admins/helpers)            |
-| Private Message (PM) | White (#FFFFFF) | Unlimited | none                  | `/m <player> <message>` | Send a private message to another player            |
-| Reply to PM          | White (#FFFFFF) | Unlimited | none                  | `/r <message>`          | Reply to the last received private message          |
-| OOC Chat             | Gray (#AEC1D5)  | 60 blocks | `(`                   | `/ooc <message>`        | Chat out of character on the server                 |
-| Global OOC           | Gray (#AEC1D5)  | Unlimited | `[`                   | `/globalOoc <message>`  | Speak in a global OOC channel (requires activation) |
+---
 
-### Global OOC Chat
-To speak in the global OOC chat, you first need to activate it by using the `/global` command. **By default, it is activated**. You can deactivate it with the same command, `/global`.
+## RP Identity System
 
-Once activated, this command allows you to communicate with all players who have also activated the global OOC chat. Keep in mind that not all players use the global chat, so you may not always get responses.
+### Anonymous hex code
 
-## Configuration (server admins)
+Every player is assigned a unique 6-digit hex code at their first connection (e.g. `#15AACF`). This code:
 
-Per-message settings live in **`config/roleplay-chat.json`** (next to your server or client `.minecraft` folder). Edit the file in **UTF-8** so special prefixes (e.g. `«`) stay valid.
+- Appears on their nametag (gray italic, below their RP name).
+- Replaces their Minecraft username in chat until they have an RP name.
+- Shows as a hover tooltip on their name in chat once they have an RP name.
+- Works as a target in **all vanilla commands** (`/kick`, `/ban`, `/op`, `/tp`, `/give`, `/kill`, `/damage`, …) — type `#` and autocomplete will suggest codes.
 
-On first run, if the file is missing, the mod creates it with built-in defaults. Invalid values for a block fall back to those defaults (see server log).
+### RP name
 
-Each message type is a JSON object with:
+On first connection, players are shown a screen to choose their RP name:
 
-| Field | Meaning |
-|-------|---------|
-| `radius` | Hearing distance in blocks. **`0`** means unlimited range (everyone online receives the message). |
-| `color` | RGB color: either a decimal integer (e.g. `11449813` for gray-blue) **or** a hex string (`"#AEC1D5"` or `"AEC1D5"`). |
-| `characters` | List of valid **prefix strings** at the start of chat. The **first** entry is also used when a player uses the matching slash command (e.g. `/shout`). **`speak`** uses an empty list `[]` (no prefix). Other types must have at least one string. |
+<table>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/rp_name_input_screen_empty.png" alt="RP name input screen"><br><sub>Name input</sub></td>
+  <td align="center"><img src="src/client/resources/templates/rp_name_input_screen_error.png" alt="RP name input screen with error"><br><sub>Validation error</sub></td>
+</tr>
+</table>
 
-**Reload without restart:** operators who pass the game’s **owner-level** check can run **`/roleplaychat reload`** to re-read the file. If reload fails, the previous settings stay active; check the server log.
+The screen cannot be bypassed with Escape — pressing Escape opens the pause menu, and the screen reappears when the player returns to the game.
 
-**Example** (shortened; your generated file will list all types):
+Rules:
+- Must be non-empty.
+- Must be 32 characters or fewer.
+- Must be unique (case-insensitive).
 
-```json
-{
-  "speak": {
-    "radius": 30,
-    "color": 16777215,
-    "characters": []
-  },
-  "whisper": {
-    "radius": 8,
-    "color": "#CC33CC",
-    "characters": ["«", "\""]
-  },
-  "shout": {
-    "radius": 80,
-    "color": 13369344,
-    "characters": ["!"]
-  }
-}
+Once set, the RP name can be changed at any time with `/rpname <name>`.
+
+### RP name chat example
+
+Once a player has an RP name, it appears in chat instead of their hex code:
+
+![RP name in chat](src/client/resources/templates/rpname_chat.png)
+
+---
+
+## Nametag Visibility
+
+### Introduction system
+
+By default, other players' RP names are hidden — their nametag shows `?`. To reveal your identity to a specific player:
+
+```
+/rp present #15AACF
 ```
 
-Keys for all supported types: `speak`, `whisper`, `shout`, `action`, `ooc`, `globalOoc`, `support`, `roll`.
+This sends a notification to that player and permanently records the introduction. After a reconnect, introductions are restored automatically.
 
-## Nametag visibility
+### Nametag states
 
-The mod controls when other players' RP names appear above their heads:
+<table>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/nameplate_with_rp_name.png" alt="Nametag with known RP name"><br><sub>Known player</sub></td>
+  <td align="center"><img src="src/client/resources/templates/nameplate_without_rp_name.png" alt="Nametag showing ?"><br><sub>Not yet introduced</sub></td>
+  <td align="center"><img src="src/client/resources/templates/nameplate_unknown_player.png" alt="Nametag hex code only"><br><sub>No RP name yet</sub></td>
+</tr>
+</table>
 
-- **Behind a block** — if a solid block stands between your camera and another player, their nametag is hidden. In **Creative mode** the check is skipped, so you can always see nametags through walls.
-- **Wearing a concealing item** — if a player equips an item listed in the `roleplay-chat:conceals_identity` tag (helmet slot), their RP name and Minecraft username are hidden regardless of line of sight.
+### Line-of-sight occlusion
 
-### Adding items that conceal identity (server admins / datapack authors)
+RP names are not visible through walls. If a solid block stands between your camera and another player, their entire nametag disappears — even if they have introduced themselves to you. Creative mode bypasses this check.
 
-Create the file `data/roleplay-chat/tags/items/conceals_identity.json` inside your datapack. List every item ID that should hide a player's nametag when worn as a helmet:
+<table>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/nameplate_visible_no_wall.png" alt="Nametag visible"><br><sub>Clear line of sight</sub></td>
+  <td align="center"><img src="src/client/resources/templates/nameplate_occluded_by_wall.png" alt="Nametag hidden by wall"><br><sub>Wall between players</sub></td>
+  <td align="center"><img src="src/client/resources/templates/nameplate_visible_creative_through_wall.png" alt="Nametag visible through wall in creative"><br><sub>Creative mode — wall ignored</sub></td>
+</tr>
+</table>
 
+### Identity-concealing headgear
+
+A player wearing an item tagged `roleplay-chat:conceals_identity` in the helmet slot appears as `?` to everyone — even players they've introduced themselves to. Their hex code remains visible so staff can still identify them.
+
+<table>
+<tr>
+  <td align="center"><img src="src/client/resources/templates/nameplate_hidden_by_headgear.png" alt="Nametag hidden by headgear"><br><sub>Concealing helmet worn</sub></td>
+  <td align="center"><img src="src/client/resources/templates/nameplate_headgear_visible_in_creative.png" alt="Nametag visible in creative despite headgear"><br><sub>Creative mode — concealment ignored</sub></td>
+</tr>
+</table>
+
+The mod ships with `minecraft:leather_helmet` in this tag by default. To add more items, create a datapack file:
+
+**`data/roleplay-chat/tags/items/conceals_identity.json`**
 ```json
 {
   "replace": false,
@@ -119,6 +164,43 @@ Create the file `data/roleplay-chat/tags/items/conceals_identity.json` inside yo
 }
 ```
 
-> `"replace": false` means your list is **merged** with the mod's default list instead of replacing it.
+> `"replace": false` merges your list with the mod's defaults instead of replacing them.
 
-The mod ships with `minecraft:leather_helmet` as a default example. Remove it from your own tag entry (or use `"replace": true`) if you don't want it.
+---
+
+## Configuration (server admins)
+
+Settings live in **`config/roleplay-chat.json`** (next to your server or `.minecraft` folder). The file is created with defaults on first run. Edit it as **UTF-8** to preserve special prefix characters (e.g. `«`).
+
+Each message type has three fields:
+
+| Field | Meaning |
+|-------|---------|
+| `radius` | Range in blocks. `0` = unlimited (delivered to all online players). |
+| `color` | RGB color as a decimal integer (`16777215`) or hex string (`"#FFFFFF"`). |
+| `characters` | Prefix strings that trigger this type. `speak` uses `[]` (no prefix). |
+
+**Reload without restart:** `/roleplaychat reload` (operator level 4) re-reads the file while the server is running. If the file is invalid, the current settings are kept and an error is logged.
+
+**Supported keys:** `speak`, `whisper`, `shout`, `action`, `ooc`, `globalOoc`, `support`, `roll`.
+
+**Example (excerpt):**
+```json
+{
+  "speak": {
+    "radius": 30,
+    "color": 16777215,
+    "characters": []
+  },
+  "whisper": {
+    "radius": 4,
+    "color": "#CC33CC",
+    "characters": ["«", "\""]
+  },
+  "shout": {
+    "radius": 80,
+    "color": 13369344,
+    "characters": ["!"]
+  }
+}
+```

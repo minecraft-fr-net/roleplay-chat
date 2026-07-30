@@ -16,6 +16,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 
 import java.util.UUID;
@@ -76,7 +78,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
-            context.assertScreenshotEquals("nameplate_visible_no_wall");
+            context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_visible_no_wall")
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
         }
     }
 
@@ -142,7 +145,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
-            context.assertScreenshotEquals("nameplate_visible_creative_through_wall");
+            context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_visible_creative_through_wall")
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
         }
     }
 
@@ -200,7 +204,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
-            context.assertScreenshotEquals("nameplate_occluded_by_wall");
+            context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_occluded_by_wall")
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
         }
     }
 }

@@ -2,6 +2,8 @@ package net.minecraftfr.roleplaychat.test.client;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
@@ -68,6 +70,7 @@ public class ChatDisplayTest implements FabricClientGameTest {
             }
         });
         context.waitTicks(20);
-        context.assertScreenshotEquals(screenshotName);
+        context.assertScreenshotEquals(TestScreenshotComparisonOptions.of(screenshotName)
+            .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
     }
 }

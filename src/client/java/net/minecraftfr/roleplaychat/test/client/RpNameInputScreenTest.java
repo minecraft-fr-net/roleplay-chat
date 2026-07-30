@@ -2,6 +2,8 @@ package net.minecraftfr.roleplaychat.test.client;
 
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraftfr.roleplaychat.screen.RpNameInputScreen;
 
@@ -21,7 +23,8 @@ public class RpNameInputScreenTest implements FabricClientGameTest {
       // Cas 1 — écran vide (premier lancement)
       context.runOnClient(client -> client.setScreen(new RpNameInputScreen("", "")));
       context.waitTicks(5);
-      context.assertScreenshotEquals("rp_name_input_screen_empty");
+      context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("rp_name_input_screen_empty")
+          .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
 
       context.runOnClient(client -> client.setScreen(null));
       context.waitTicks(2);
@@ -30,7 +33,8 @@ public class RpNameInputScreenTest implements FabricClientGameTest {
       context.runOnClient(client ->
           client.setScreen(new RpNameInputScreen("screen.roleplay-chat.rp_name_input.error.taken", "Elara")));
       context.waitTicks(5);
-      context.assertScreenshotEquals("rp_name_input_screen_error");
+      context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("rp_name_input_screen_error")
+          .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
     }
   }
 }

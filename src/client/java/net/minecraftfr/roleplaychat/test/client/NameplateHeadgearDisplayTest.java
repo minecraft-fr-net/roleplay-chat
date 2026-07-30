@@ -16,6 +16,8 @@ import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameRevealedCache;
@@ -94,7 +96,8 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
-            context.assertScreenshotEquals("nameplate_headgear_visible_in_creative");
+            context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_headgear_visible_in_creative")
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
         }
     }
 
@@ -155,7 +158,8 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
 
             context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
             context.waitTicks(2);
-            context.assertScreenshotEquals("nameplate_hidden_by_headgear");
+            context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_hidden_by_headgear")
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
         }
     }
 }

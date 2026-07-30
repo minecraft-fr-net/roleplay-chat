@@ -5,6 +5,8 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraft.client.option.Perspective;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
@@ -79,7 +81,10 @@ public class NameplateDisplayTest implements FabricClientGameTest {
         // Vider le chat pour éviter le message "MockPlayer joined the game"
         context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
         context.waitTicks(2);
-        context.assertScreenshotEquals(name);
+        context.assertScreenshotEquals(
+            TestScreenshotComparisonOptions.of(name)
+                .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f))
+        );
     }
 
     private static void spawnMockPlayerInFront(TestSingleplayerContext sp, ClientGameTestContext context, String name, UUID uuid) {

@@ -6,12 +6,6 @@ import java.util.UUID;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
-
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
 import net.minecraftfr.roleplaychat.ChatManager;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
@@ -29,26 +23,31 @@ import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
 import net.minecraftfr.roleplaychat.nameplate.RpNameUpdatePayload;
 import net.minecraftfr.roleplaychat.nameplate.RpNameVisibilityStore;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.server.level.ServerPlayer;
 
 public class RoleplayChatCommands {
-  public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
+  public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
     registerRpNameCommand(dispatcher);
     registerRpPresentCommand(dispatcher);
 
-    dispatcher.register(CommandManager.literal("roleplaychat")
-      .requires(CommandManager.requirePermissionLevel(CommandManager.OWNERS_CHECK))
-      .then(CommandManager.literal("reload")
+    dispatcher.register(Commands.literal("roleplaychat")
+      .requires(Commands.hasPermission(Commands.LEVEL_OWNERS))
+      .then(Commands.literal("reload")
         .executes(context -> {
           if (RoleplayChatConfig.reload()) {
-            context.getSource().sendFeedback(() -> Text.literal("[roleplay-chat] Configuration reloaded."), true);
+            context.getSource().sendSuccess(() -> Component.literal("[roleplay-chat] Configuration reloaded."), true);
             return 1;
           }
-          context.getSource().sendError(Text.literal("[roleplay-chat] Reload failed; see server log."));
+          context.getSource().sendFailure(Component.literal("[roleplay-chat] Reload failed; see server log."));
           return 0;
         })));
 
-    dispatcher.register(CommandManager.literal(SpeakMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(SpeakMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
 
@@ -60,8 +59,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(ShoutMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(ShoutMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().shout();
@@ -74,8 +73,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(WhisperMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(WhisperMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().whisper();
@@ -88,8 +87,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(ActionMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(ActionMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().action();
@@ -102,8 +101,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(GlobalOOCMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(GlobalOOCMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().globalOoc();
@@ -116,8 +115,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(OOCMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(OOCMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().ooc();
@@ -130,8 +129,8 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(SupportMessage.COMMAND)
-      .then(CommandManager.argument("message", StringArgumentType.string())
+    dispatcher.register(Commands.literal(SupportMessage.COMMAND)
+      .then(Commands.argument("message", StringArgumentType.string())
       .executes(context -> {
         String message = StringArgumentType.getString(context, "message");
         var settings = RoleplayChatConfig.get().support();
@@ -144,9 +143,9 @@ public class RoleplayChatCommands {
       }))
     );
 
-    dispatcher.register(CommandManager.literal(RollMessage.COMMAND)
+    dispatcher.register(Commands.literal(RollMessage.COMMAND)
       .executes(ctx -> executeRoll(ctx, "1d20"))
-      .then(CommandManager.argument("notation", StringArgumentType.word())
+      .then(Commands.argument("notation", StringArgumentType.word())
         .executes(ctx -> executeRoll(ctx, StringArgumentType.getString(ctx, "notation"))))
     );
   }
@@ -159,13 +158,13 @@ public class RoleplayChatCommands {
    * Formats acceptés : {@code d20}, {@code 1d20}, {@code d6-1}, {@code 2d8+2} (le
    * multiplicateur est ignoré — un seul dé est toujours lancé).
    */
-  private static int executeRoll(CommandContext<ServerCommandSource> ctx, String notation) {
-    ServerPlayerEntity sender = ctx.getSource().getPlayer();
+  private static int executeRoll(CommandContext<CommandSourceStack> ctx, String notation) {
+    ServerPlayer sender = ctx.getSource().getPlayer();
     if (sender == null) return 0;
 
     java.util.regex.Matcher m = DICE_PATTERN.matcher(notation);
     if (!m.matches()) {
-      ctx.getSource().sendError(Text.literal(
+      ctx.getSource().sendFailure(Component.literal(
           "Notation invalide. Exemples : d20  1d20+3  d6-1"));
       return 0;
     }
@@ -178,17 +177,17 @@ public class RoleplayChatCommands {
         bonus = Integer.parseInt(m.group(3)); // inclut le signe + ou -
       }
     } catch (NumberFormatException e) {
-      ctx.getSource().sendError(Text.literal("Notation invalide. Exemples : d20  1d20+3  d6-1"));
+      ctx.getSource().sendFailure(Component.literal("Notation invalide. Exemples : d20  1d20+3  d6-1"));
       return 0;
     }
 
     if (sides < 2 || sides > 1000) {
-      ctx.getSource().sendError(Text.literal("Le nombre de faces doit être entre 2 et 1000."));
+      ctx.getSource().sendFailure(Component.literal("Le nombre de faces doit être entre 2 et 1000."));
       return 0;
     }
 
     RollMessage roll = new RollMessage(sides, bonus, RoleplayChatConfig.get().roll());
-    List<ServerPlayerEntity> players = ctx.getSource().getServer().getPlayerManager().getPlayerList();
+    List<ServerPlayer> players = ctx.getSource().getServer().getPlayerList().getPlayers();
     ChatManager.sendMessageToPlayerListFromPosition(sender, players, roll, null);
     return 1;
   }
@@ -197,12 +196,12 @@ public class RoleplayChatCommands {
   // Commande /rp present
   // ---------------------------------------------------------------------------
 
-  static void registerRpPresentCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
-    dispatcher.register(CommandManager.literal("rp")
-      .then(CommandManager.literal("present")
-        .then(CommandManager.argument("hex", StringArgumentType.word())
+  static void registerRpPresentCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+    dispatcher.register(Commands.literal("rp")
+      .then(Commands.literal("present")
+        .then(Commands.argument("hex", StringArgumentType.word())
           .executes(ctx -> {
-            ServerPlayerEntity sender = ctx.getSource().getPlayer();
+            ServerPlayer sender = ctx.getSource().getPlayer();
             if (sender == null) return 0;
             String hex = StringArgumentType.getString(ctx, "hex").toUpperCase();
 
@@ -210,37 +209,37 @@ public class RoleplayChatCommands {
             RpNameStore rpStore = RpNameStore.get(server);
             PlayerCodeStore codeStore = PlayerCodeStore.get(server);
 
-            String senderRp = rpStore.getRpName(sender.getUuid()).orElse(null);
+            String senderRp = rpStore.getRpName(sender.getUUID()).orElse(null);
             if (senderRp == null) {
-              ctx.getSource().sendError(Text.literal(
+              ctx.getSource().sendFailure(Component.literal(
                   "Vous n'avez pas de pseudo RP. Utilisez /rpname pour en définir un."));
               return 0;
             }
 
             UUID targetUuid = codeStore.getUuidByCode(hex);
             if (targetUuid == null) {
-              ctx.getSource().sendError(Text.literal("Joueur introuvable : " + hex));
+              ctx.getSource().sendFailure(Component.literal("Joueur introuvable : " + hex));
               return 0;
             }
-            if (targetUuid.equals(sender.getUuid())) {
-              ctx.getSource().sendError(Text.literal(
+            if (targetUuid.equals(sender.getUUID())) {
+              ctx.getSource().sendFailure(Component.literal(
                   "Vous ne pouvez pas vous présenter à vous-même."));
               return 0;
             }
 
             RpNameVisibilityStore visibilityStore = RpNameVisibilityStore.get(server);
-            visibilityStore.addVisibility(targetUuid, sender.getUuid());
+            visibilityStore.addVisibility(targetUuid, sender.getUUID());
 
-            ServerPlayerEntity target = server.getPlayerManager().getPlayer(targetUuid);
+            ServerPlayer target = server.getPlayerList().getPlayer(targetUuid);
             if (target != null) {
-              ServerPlayNetworking.send(target, new RpNameRevealPayload(sender.getUuid()));
-              String senderCode = codeStore.getCode(sender.getUuid()).orElse("?");
-              target.sendMessage(Text.literal(
+              ServerPlayNetworking.send(target, new RpNameRevealPayload(sender.getUUID()));
+              String senderCode = codeStore.getCode(sender.getUUID()).orElse("?");
+              target.displayClientMessage(Component.literal(
                   senderRp + " (" + senderCode + ") s'est présenté à vous."), false);
             }
 
-            ctx.getSource().sendFeedback(
-                () -> Text.literal("Vous vous êtes présenté à " + hex + "."), false);
+            ctx.getSource().sendSuccess(
+                () -> Component.literal("Vous vous êtes présenté à " + hex + "."), false);
             return 1;
           }))));
   }
@@ -251,20 +250,20 @@ public class RoleplayChatCommands {
 
   private static final int RP_NAME_MAX_LENGTH = 32;
 
-  static void registerRpNameCommand(CommandDispatcher<ServerCommandSource> dispatcher) {
-    dispatcher.register(CommandManager.literal("rpname")
-      .then(CommandManager.argument("name", StringArgumentType.greedyString())
+  static void registerRpNameCommand(CommandDispatcher<CommandSourceStack> dispatcher) {
+    dispatcher.register(Commands.literal("rpname")
+      .then(Commands.argument("name", StringArgumentType.greedyString())
         .executes(ctx -> {
           String name = StringArgumentType.getString(ctx, "name").trim();
-          ServerPlayerEntity player = ctx.getSource().getPlayer();
+          ServerPlayer player = ctx.getSource().getPlayer();
           if (player == null) return 0;
 
           if (name.isEmpty()) {
-            ctx.getSource().sendError(Text.literal("Le pseudo RP ne peut pas être vide."));
+            ctx.getSource().sendFailure(Component.literal("Le pseudo RP ne peut pas être vide."));
             return 0;
           }
           if (name.length() > RP_NAME_MAX_LENGTH) {
-            ctx.getSource().sendError(Text.literal(
+            ctx.getSource().sendFailure(Component.literal(
                 "Le pseudo RP ne peut pas dépasser " + RP_NAME_MAX_LENGTH + " caractères."));
             return 0;
           }
@@ -272,35 +271,35 @@ public class RoleplayChatCommands {
           var server = ctx.getSource().getServer();
           RpNameStore store = RpNameStore.get(server);
 
-          if (store.isNameTaken(name, player.getUuid())) {
-            ctx.getSource().sendError(Text.literal(
+          if (store.isNameTaken(name, player.getUUID())) {
+            ctx.getSource().sendFailure(Component.literal(
                 "Le pseudo « " + name + " » est déjà utilisé par un autre joueur."));
             return 0;
           }
 
-          store.setRpName(player.getUuid(), name);
+          store.setRpName(player.getUUID(), name);
 
           // Synchroniser le nouveau nom RP avec tous les clients connectés
-          RpNameUpdatePayload payload = new RpNameUpdatePayload(player.getUuid(), name);
-          server.getPlayerManager().getPlayerList().forEach(p ->
+          RpNameUpdatePayload payload = new RpNameUpdatePayload(player.getUUID(), name);
+          server.getPlayerList().getPlayers().forEach(p ->
               ServerPlayNetworking.send(p, payload));
 
           // Mettre à jour la liste Tab (PlayerList)
-          server.getPlayerManager().sendToAll(
-              new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, player));
+          server.getPlayerList().broadcastAll(
+              new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME, player));
 
-          ctx.getSource().sendFeedback(
-              () -> Text.literal("Pseudo RP défini : " + name), false);
+          ctx.getSource().sendSuccess(
+              () -> Component.literal("Pseudo RP défini : " + name), false);
           return 1;
         })));
   }
 
-  private static void sendMessageFromCommand(MessageType messageType, CommandContext<ServerCommandSource> context) {
-    ServerPlayerEntity sender = context.getSource().getPlayer();
+  private static void sendMessageFromCommand(MessageType messageType, CommandContext<CommandSourceStack> context) {
+    ServerPlayer sender = context.getSource().getPlayer();
     if (sender == null) {
       return;
     }
-    List<ServerPlayerEntity> players = context.getSource().getServer().getPlayerManager().getPlayerList();
+    List<ServerPlayer> players = context.getSource().getServer().getPlayerList().getPlayers();
     ChatManager.sendMessageToPlayerListFromPosition(sender, players, messageType, null);
   }
 }

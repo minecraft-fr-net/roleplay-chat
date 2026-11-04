@@ -47,7 +47,7 @@ public class RoleplayChatClient implements ClientModInitializer {
 		// Désactivé en mode gametest : les tests ouvrent l'écran directement via setScreen().
 		if (System.getProperty("fabric.client.gametest") == null) {
 			ClientTickEvents.END_CLIENT_TICK.register(client -> {
-				if (client.currentScreen == null && client.player != null) {
+				if (client.screen == null && client.player != null) {
 					if (pendingRpNameScreen != null) {
 						client.setScreen(new RpNameInputScreen(pendingRpNameScreen.errorKey(), pendingRpNameScreen.errorArg()));
 						pendingRpNameScreen = null;

@@ -5,15 +5,15 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.CameraType;
 
 /**
  * Test client qui vérifie visuellement l'affichage d'un message Speak via le vrai flow de chat.
  *
  * <p>Le joueur envoie un message sans préfixe → {@code ChatManager} le traite comme un
  * {@code SpeakMessage} → {@code MessageType.sendMessage} est appelé avec un vrai
- * {@code SignedMessage} → {@code SentMessage.Chat} → aucun indicateur système côté client.
+ * {@code PlayerChatMessage} → {@code OutgoingChatMessage.Player} → aucun indicateur système côté client.
  *
  * <p>Au premier lancement, le template de référence est auto-généré dans
  * {@code src/client/resources/templates/speak_radius_display.png}.
@@ -37,18 +37,18 @@ public class ChatRadiusDisplayTest implements FabricClientGameTest {
             sp.getClientWorld().waitForChunksDownload();
             sp.getClientWorld().waitForChunksRender();
 
-            context.runOnClient((MinecraftClient client) ->
-                client.options.setPerspective(Perspective.FIRST_PERSON)
+            context.runOnClient((Minecraft client) ->
+                client.options.setCameraType(CameraType.FIRST_PERSON)
             );
             context.waitTicks(20);
 
             // Speak via le vrai flow de chat : sendChatMessage → ChatManager → SpeakMessage
-            // → MessageType.sendMessage(sender, receiver, signedMessage) avec un vrai SignedMessage
-            // → SentMessage.Chat → indicateur SECURE (aucun indicateur) en mode intégré
+            // → MessageType.sendMessage(sender, receiver, signedMessage) avec un vrai PlayerChatMessage
+            // → OutgoingChatMessage.Player → indicateur SECURE (aucun indicateur) en mode intégré
             context.runOnClient(client -> {
-                var handler = client.getNetworkHandler();
+                var handler = client.getConnection();
                 if (handler != null) {
-                    handler.sendChatMessage("Vous m'entendez ?");
+                    handler.sendChat("Vous m'entendez ?");
                 }
             });
 

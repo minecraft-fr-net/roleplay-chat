@@ -1,9 +1,9 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 
 public class RollMessage extends MessageType {
@@ -32,33 +32,33 @@ public class RollMessage extends MessageType {
   }
 
   @Override
-  public MutableText formatMessage(ServerPlayerEntity player) {
+  public MutableComponent formatMessage(ServerPlayer player) {
     boolean criticalSuccess = roll == sides;
     boolean criticalFailure = roll == 1;
     boolean critical = criticalSuccess || criticalFailure;
 
     int color = getFadedColor();
 
-    MutableText text = Text.literal(formatContentMessage(player))
-        .styled(style -> critical
+    MutableComponent text = Component.literal(formatContentMessage(player))
+        .withStyle(style -> critical
             ? style.withColor(TextColor.fromRgb(color)).withBold(true)
             : style.withColor(TextColor.fromRgb(color)));
 
     if (criticalSuccess) {
-      text.append(Text.literal(" "))
-          .append(Text.translatable("roleplay-chat.roll.critical_success")
-              .styled(style -> style.withColor(TextColor.fromRgb(color)).withBold(true)));
+      text.append(Component.literal(" "))
+          .append(Component.translatable("roleplay-chat.roll.critical_success")
+              .withStyle(style -> style.withColor(TextColor.fromRgb(color)).withBold(true)));
     } else if (criticalFailure) {
-      text.append(Text.literal(" "))
-          .append(Text.translatable("roleplay-chat.roll.critical_failure")
-              .styled(style -> style.withColor(TextColor.fromRgb(color)).withBold(true)));
+      text.append(Component.literal(" "))
+          .append(Component.translatable("roleplay-chat.roll.critical_failure")
+              .withStyle(style -> style.withColor(TextColor.fromRgb(color)).withBold(true)));
     }
 
     return text;
   }
 
   @Override
-  public String formatContentMessage(ServerPlayerEntity player) {
+  public String formatContentMessage(ServerPlayer player) {
     int total = roll + bonus;
     String name = getPlayerDisplayName(player);
     // Notation affichée : « 1d20+3 » ou « 1d20 » si pas de bonus

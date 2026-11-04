@@ -10,11 +10,10 @@ import java.util.Set;
 import java.util.UUID;
 
 import com.mojang.serialization.Codec;
-
-import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateType;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Stockage persistant des relations de présentation RP.
@@ -24,7 +23,7 @@ import net.minecraft.world.PersistentStateType;
  * Quand Elrich se présente à Basile via {@code /rp present}, l'UUID d'Elrich
  * est ajouté au set de Basile — Basile verra alors le nom RP d'Elrich.
  */
-public class RpNameVisibilityStore extends PersistentState {
+public class RpNameVisibilityStore extends SavedData {
 
     private static final String DATA_KEY = "roleplay-chat-visibility";
 
@@ -49,11 +48,11 @@ public class RpNameVisibilityStore extends PersistentState {
             }
         );
 
-    private static final PersistentStateType<RpNameVisibilityStore> TYPE =
-        new PersistentStateType<>(DATA_KEY, RpNameVisibilityStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
+    private static final SavedDataType<RpNameVisibilityStore> TYPE =
+        new SavedDataType<>(DATA_KEY, RpNameVisibilityStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
 
     public static RpNameVisibilityStore get(MinecraftServer server) {
-        return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE);
+        return server.overworld().getDataStorage().computeIfAbsent(TYPE);
     }
 
     // -------------------------------------------------------------------------
@@ -66,7 +65,7 @@ public class RpNameVisibilityStore extends PersistentState {
      */
     public void addVisibility(UUID observer, UUID presenter) {
         visibility.computeIfAbsent(observer, k -> new HashSet<>()).add(presenter);
-        markDirty();
+        setDirty();
     }
 
     public boolean canSee(UUID observer, UUID presenter) {

@@ -1,9 +1,8 @@
 package net.minecraftfr.roleplaychat.nameplate;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
-
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 
 /**
  * Centralise la logique d'affichage du nametag RP pour éviter la duplication
@@ -26,13 +25,13 @@ public final class RpNameTagHelper {
      * Retourne le label principal à afficher au-dessus de la tête du joueur,
      * ou {@code null} si aucun override n'est nécessaire (affichage vanilla).
      */
-    public static @Nullable Text getDisplayName(java.util.UUID uuid, boolean creative) {
+    public static @Nullable Component getDisplayName(java.util.UUID uuid, boolean creative) {
         String rp = RpNameClientCache.get(uuid);
         if (rp != null && (creative || RpNameRevealedCache.contains(uuid))) {
-            return Text.literal(rp);
+            return Component.literal(rp);
         }
         if (PlayerCodeClientCache.get(uuid) != null) {
-            return Text.literal("?").styled(s -> s.withColor(Formatting.WHITE));
+            return Component.literal("?").withStyle(s -> s.withColor(ChatFormatting.WHITE));
         }
         return null;
     }
@@ -41,9 +40,9 @@ public final class RpNameTagHelper {
      * Retourne le label secondaire (code hex) affiché en dessous du label principal,
      * ou {@code null} si le joueur n'a pas encore de code connu.
      */
-    public static @Nullable Text getHexLabel(java.util.UUID uuid) {
+    public static @Nullable Component getHexLabel(java.util.UUID uuid) {
         String code = PlayerCodeClientCache.get(uuid);
         if (code == null) return null;
-        return Text.literal(code).styled(s -> s.withColor(Formatting.GRAY).withItalic(true));
+        return Component.literal(code).withStyle(s -> s.withColor(ChatFormatting.GRAY).withItalic(true));
     }
 }

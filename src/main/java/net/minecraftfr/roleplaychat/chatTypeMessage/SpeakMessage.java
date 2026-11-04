@@ -1,6 +1,6 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
 
@@ -18,7 +18,7 @@ public class SpeakMessage extends MessageType {
   }
 
   @Override
-  public String formatContentMessage(ServerPlayerEntity player) {
+  public String formatContentMessage(ServerPlayer player) {
     return getChatName(player) + " " + message;
   }
 }

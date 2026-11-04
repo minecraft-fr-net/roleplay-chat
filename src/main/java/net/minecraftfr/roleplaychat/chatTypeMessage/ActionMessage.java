@@ -1,6 +1,6 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 
 public class ActionMessage extends MessageType {
@@ -13,7 +13,7 @@ public class ActionMessage extends MessageType {
 
   /** Format action : {@code * NomJoueur message} (sans chevrons). */
   @Override
-  protected String getChatName(ServerPlayerEntity player) {
+  protected String getChatName(ServerPlayer player) {
     return "* " + getPlayerDisplayName(player);
   }
 }

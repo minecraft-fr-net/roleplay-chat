@@ -1,6 +1,6 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.config.MessageTypeSettings;
 
 public class GlobalOOCMessage extends MessageType {
@@ -12,7 +12,7 @@ public class GlobalOOCMessage extends MessageType {
   }
 
   @Override
-  public String formatContentMessage(ServerPlayerEntity player) {
+  public String formatContentMessage(ServerPlayer player) {
     return getChatName(player) + " [ " + contentAfterPrefix() + " ]";
   }
 }

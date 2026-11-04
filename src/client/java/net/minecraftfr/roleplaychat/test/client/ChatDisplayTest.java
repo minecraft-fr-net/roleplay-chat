@@ -5,8 +5,8 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.CameraType;
 
 /**
  * Test client qui envoie des messages de chat de chaque type
@@ -27,8 +27,8 @@ public class ChatDisplayTest implements FabricClientGameTest {
             sp.getClientWorld().waitForChunksRender();
 
             // Vue à la première personne pour voir le chat sans obstruction
-            context.runOnClient((MinecraftClient client) ->
-                client.options.setPerspective(Perspective.FIRST_PERSON)
+            context.runOnClient((Minecraft client) ->
+                client.options.setCameraType(CameraType.FIRST_PERSON)
             );
             context.waitTicks(20);
 
@@ -63,10 +63,10 @@ public class ChatDisplayTest implements FabricClientGameTest {
      * Si le template est absent, il est créé automatiquement à la première exécution.
      */
     private static void sendAndCapture(ClientGameTestContext context, String message, String screenshotName) {
-        context.runOnClient((MinecraftClient client) -> {
-            var handler = client.getNetworkHandler();
+        context.runOnClient((Minecraft client) -> {
+            var handler = client.getConnection();
             if (handler != null) {
-                handler.sendChatMessage(message);
+                handler.sendChat(message);
             }
         });
         context.waitTicks(20);

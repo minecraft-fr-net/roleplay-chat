@@ -5,13 +5,13 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.GameMenuScreen;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.TextWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraftfr.roleplaychat.RoleplayChatClient;
 import net.minecraftfr.roleplaychat.nameplate.RpNameInputPayload;
 
@@ -24,26 +24,26 @@ public class RpNameInputScreen extends Screen {
   private static final int BUTTON_HEIGHT = 20;
 
   /** Texte d'erreur à afficher, null si aucune erreur. */
-  private final @Nullable Text errorText;
-  private TextFieldWidget nameField;
-  private ButtonWidget confirmButton;
+  private final @Nullable Component errorText;
+  private EditBox nameField;
+  private Button confirmButton;
 
   public RpNameInputScreen(String errorKey, String errorArg) {
-    super(Text.translatable("screen.roleplay-chat.rp_name_input.title"));
+    super(Component.translatable("screen.roleplay-chat.rp_name_input.title"));
     if (errorKey.isEmpty()) {
       this.errorText = null;
     } else if (errorArg.isEmpty()) {
-      this.errorText = Text.translatable(errorKey);
+      this.errorText = Component.translatable(errorKey);
     } else {
-      this.errorText = Text.translatable(errorKey, errorArg);
+      this.errorText = Component.translatable(errorKey, errorArg);
     }
   }
 
   /** TextWidget ne gère plus l'alignement depuis 1.21.11 : on le dimensionne au texte et on le centre. */
-  private TextWidget centeredText(Text text, int color, int centerX, int y) {
-    Text colored = text.copy().withColor(color);
-    int width = this.textRenderer.getWidth(colored);
-    return new TextWidget(centerX - width / 2, y, width, 9, colored, this.textRenderer);
+  private StringWidget centeredText(Component text, int color, int centerX, int y) {
+    Component colored = text.copy().withColor(color);
+    int width = this.font.width(colored);
+    return new StringWidget(centerX - width / 2, y, width, 9, colored, this.font);
   }
 
   @Override
@@ -52,49 +52,49 @@ public class RpNameInputScreen extends Screen {
     int centerY = this.height / 2;
 
     // Titre centré
-    this.addDrawableChild(centeredText(this.title, 0xFFFFFF, centerX, centerY - 40));
+    this.addRenderableWidget(centeredText(this.title, 0xFFFFFF, centerX, centerY - 40));
 
     // Label "Pseudo RP" / "RP Name"
-    this.addDrawableChild(new TextWidget(
+    this.addRenderableWidget(new StringWidget(
         centerX - FIELD_WIDTH / 2, centerY - 13,
         FIELD_WIDTH, 9,
-        Text.translatable("screen.roleplay-chat.rp_name_input.label").copy().withColor(0xAAAAAA),
-        this.textRenderer
+        Component.translatable("screen.roleplay-chat.rp_name_input.label").copy().withColor(0xAAAAAA),
+        this.font
     ));
 
     // Message d'erreur éventuel
     if (errorText != null) {
-      this.addDrawableChild(centeredText(
+      this.addRenderableWidget(centeredText(
           errorText, 0xFF5555, centerX, centerY + FIELD_HEIGHT + 8 + BUTTON_HEIGHT + 6));
     }
 
     // Champ de saisie
-    nameField = new TextFieldWidget(
-        this.textRenderer,
+    nameField = new EditBox(
+        this.font,
         centerX - FIELD_WIDTH / 2,
         centerY,
         FIELD_WIDTH,
         FIELD_HEIGHT,
-        Text.empty()
+        Component.empty()
     );
     nameField.setMaxLength(MAX_NAME_LENGTH);
-    nameField.setChangedListener(text -> confirmButton.active = !text.trim().isEmpty());
-    this.addDrawableChild(nameField);
+    nameField.setResponder(text -> confirmButton.active = !text.trim().isEmpty());
+    this.addRenderableWidget(nameField);
     this.setInitialFocus(nameField);
 
     // Bouton Confirmer
-    confirmButton = ButtonWidget.builder(
-        Text.translatable("screen.roleplay-chat.rp_name_input.confirm"),
+    confirmButton = Button.builder(
+        Component.translatable("screen.roleplay-chat.rp_name_input.confirm"),
         button -> submit()
     )
-        .dimensions(centerX - BUTTON_WIDTH / 2, centerY + FIELD_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
+        .bounds(centerX - BUTTON_WIDTH / 2, centerY + FIELD_HEIGHT + 8, BUTTON_WIDTH, BUTTON_HEIGHT)
         .build();
     confirmButton.active = false;
-    this.addDrawableChild(confirmButton);
+    this.addRenderableWidget(confirmButton);
   }
 
   @Override
-  public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+  public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
     int centerX = this.width / 2;
     int centerY = this.height / 2;
 
@@ -113,10 +113,10 @@ public class RpNameInputScreen extends Screen {
   }
 
   @Override
-  public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+  public boolean keyPressed(net.minecraft.client.input.KeyEvent input) {
     int keyCode = input.key();
     if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
-      if (this.client != null) this.client.setScreen(new GameMenuScreen(true));
+      if (this.minecraft != null) this.minecraft.setScreen(new PauseScreen(true));
       return true;
     }
     if (keyCode == GLFW.GLFW_KEY_ENTER && confirmButton.active) {
@@ -132,10 +132,10 @@ public class RpNameInputScreen extends Screen {
   }
 
   private void submit() {
-    String name = nameField.getText().trim();
+    String name = nameField.getValue().trim();
     if (name.isEmpty()) return;
     RoleplayChatClient.clearNeedsRpName();
     ClientPlayNetworking.send(new RpNameInputPayload(name));
-    this.close();
+    this.onClose();
   }
 }

@@ -4,9 +4,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
 import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
 
@@ -17,21 +16,21 @@ import net.minecraftfr.roleplaychat.nameplate.RpNameStore;
  * <p>Minecraft envoie automatiquement la valeur de cette méthode dans le paquet
  * {@code PlayerListS2CPacket} lors de la connexion et lors des mises à jour.
  */
-@Mixin(ServerPlayerEntity.class)
+@Mixin(ServerPlayer.class)
 public abstract class ServerPlayerRpNameMixin {
 
-  @Inject(method = "getPlayerListName", at = @At("RETURN"), cancellable = true)
-  private void injectRpListName(CallbackInfoReturnable<Text> cir) {
-    ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
-    if (self.getEntityWorld().getServer() == null) return;
+  @Inject(method = "getTabListDisplayName", at = @At("RETURN"), cancellable = true)
+  private void injectRpListName(CallbackInfoReturnable<Component> cir) {
+    ServerPlayer self = (ServerPlayer) (Object) this;
+    if (self.level().getServer() == null) return;
 
-    String rpName = RpNameStore.get(self.getEntityWorld().getServer()).getRpName(self.getUuid()).orElse(null);
+    String rpName = RpNameStore.get(self.level().getServer()).getRpName(self.getUUID()).orElse(null);
     if (rpName != null) {
-      cir.setReturnValue(Text.literal(rpName));
+      cir.setReturnValue(Component.literal(rpName));
       return;
     }
 
-    PlayerCodeStore.get(self.getEntityWorld().getServer()).getCode(self.getUuid())
-        .ifPresent(code -> cir.setReturnValue(Text.literal(code)));
+    PlayerCodeStore.get(self.level().getServer()).getCode(self.getUUID())
+        .ifPresent(code -> cir.setReturnValue(Component.literal(code)));
   }
 }

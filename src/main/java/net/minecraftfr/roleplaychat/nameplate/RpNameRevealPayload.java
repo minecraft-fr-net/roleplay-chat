@@ -1,11 +1,10 @@
 package net.minecraftfr.roleplaychat.nameplate;
 
 import java.util.UUID;
-
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 /**
  * Paquet serveur → client envoyé quand un joueur se présente à un autre
@@ -16,19 +15,19 @@ import net.minecraft.util.Identifier;
  * Ce payload est un signal d'autorisation : « tu peux maintenant afficher
  * le nom RP de cet UUID ».
  */
-public record RpNameRevealPayload(UUID presenterUuid) implements CustomPayload {
+public record RpNameRevealPayload(UUID presenterUuid) implements CustomPacketPayload {
 
-    public static final CustomPayload.Id<RpNameRevealPayload> ID =
-        new CustomPayload.Id<>(Identifier.of("roleplay-chat", "rp_name_reveal"));
+    public static final CustomPacketPayload.Type<RpNameRevealPayload> ID =
+        new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("roleplay-chat", "rp_name_reveal"));
 
-    public static final PacketCodec<PacketByteBuf, RpNameRevealPayload> CODEC =
-        PacketCodec.of(
-            (value, buf) -> buf.writeUuid(value.presenterUuid()),
-            buf -> new RpNameRevealPayload(buf.readUuid())
+    public static final StreamCodec<FriendlyByteBuf, RpNameRevealPayload> CODEC =
+        StreamCodec.ofMember(
+            (value, buf) -> buf.writeUUID(value.presenterUuid()),
+            buf -> new RpNameRevealPayload(buf.readUUID())
         );
 
     @Override
-    public CustomPayload.Id<RpNameRevealPayload> getId() {
+    public CustomPacketPayload.Type<RpNameRevealPayload> type() {
         return ID;
     }
 }

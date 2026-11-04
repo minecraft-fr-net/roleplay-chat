@@ -10,33 +10,33 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
 
 /**
  * Permet d'utiliser un code {@code #XXXXXX} partout où Minecraft attend un
- * nom de joueur via {@link PlayerManager#getPlayer(String)} — notamment les
+ * nom de joueur via {@link PlayerList#getPlayerByName(String)} — notamment les
  * sélecteurs d'entités ({@code /damage}, {@code /give}, {@code /kill},
  * {@code /tp}, etc.).
  */
-@Mixin(PlayerManager.class)
+@Mixin(PlayerList.class)
 public abstract class PlayerManagerHexCodeMixin {
 
     @Shadow private MinecraftServer server;
 
-    @Shadow public abstract @Nullable ServerPlayerEntity getPlayer(UUID uuid);
+    @Shadow public abstract @Nullable ServerPlayer getPlayer(UUID uuid);
 
     @Inject(
-        method = "getPlayer(Ljava/lang/String;)Lnet/minecraft/server/network/ServerPlayerEntity;",
+        method = "getPlayerByName(Ljava/lang/String;)Lnet/minecraft/server/level/ServerPlayer;",
         at = @At("HEAD"),
         cancellable = true
     )
-    private void resolveHexCodePlayer(String name, CallbackInfoReturnable<ServerPlayerEntity> cir) {
+    private void resolveHexCodePlayer(String name, CallbackInfoReturnable<ServerPlayer> cir) {
         if (name == null || name.length() != 7 || name.charAt(0) != '#') return;
         UUID uuid = PlayerCodeStore.get(server).getUuidByCode(name.toUpperCase());
         if (uuid == null) return;
-        ServerPlayerEntity player = getPlayer(uuid);
+        ServerPlayer player = getPlayer(uuid);
         if (player != null) cir.setReturnValue(player);
     }
 }

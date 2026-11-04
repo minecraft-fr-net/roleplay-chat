@@ -5,17 +5,17 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.rule.GameRules;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.client.CameraType;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ClientInformation;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
@@ -48,35 +48,35 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 localPos[0] = mc.player.getX();
                 localPos[1] = mc.player.getY();
                 localPos[2] = mc.player.getZ();
-                mc.options.setPerspective(Perspective.FIRST_PERSON);
-                mc.player.setYaw(0.0f);
-                mc.player.setPitch(-20.0f);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.player.setYRot(0.0f);
+                mc.player.setXRot(-20.0f);
             });
 
             sp.getServer().runOnServer(server -> {
-                var world = server.getOverworld();
+                var world = server.overworld();
 
-                world.setTimeOfDay(6000L);
-                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-                world.resetWeather();
+                world.setDayTime(6000L);
+                world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+                world.resetWeatherCycle();
 
                 GameProfile profile = new GameProfile(UUID_NO_WALL, "Visible");
-                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
-                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+                ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
+                Connection connection = new Connection(PacketFlow.SERVERBOUND);
                 new EmbeddedChannel(connection);
-                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                server.getPlayerList().placeNewPlayer(connection, mock, data);
                 mock.setPos(localPos[0], localPos[1], localPos[2] + 4.0);
-                mock.setYaw(180.0f);
-                mock.setPitch(0.0f);
+                mock.setYRot(180.0f);
+                mock.setXRot(0.0f);
             });
 
             context.waitTicks(20);
             context.runOnClient(mc -> RpNameClientCache.set(UUID_NO_WALL, "Elara"));
             context.waitTicks(5);
 
-            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
             context.waitTicks(2);
             context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_visible_no_wall")
                 .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
@@ -92,18 +92,18 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 localPos[0] = mc.player.getX();
                 localPos[1] = mc.player.getY();
                 localPos[2] = mc.player.getZ();
-                mc.options.setPerspective(Perspective.FIRST_PERSON);
-                mc.player.setYaw(0.0f);
-                mc.player.setPitch(-20.0f);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.player.setYRot(0.0f);
+                mc.player.setXRot(-20.0f);
             });
 
             sp.getServer().runOnServer(server -> {
-                var world = server.getOverworld();
+                var world = server.overworld();
 
-                world.setTimeOfDay(6000L);
-                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-                world.resetWeather();
+                world.setDayTime(6000L);
+                world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+                world.resetWeatherCycle();
 
                 // Même mur que le test d'occlusion
                 BlockPos wallBase = new BlockPos(
@@ -111,39 +111,39 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                     (int) Math.floor(localPos[1]),
                     (int) Math.floor(localPos[2]) + 1
                 );
-                BlockState stone = Blocks.STONE.getDefaultState();
+                BlockState stone = Blocks.STONE.defaultBlockState();
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dy = 0; dy <= 3; dy++) {
-                        world.setBlockState(wallBase.add(dx, dy, 0), stone);
+                        world.setBlockAndUpdate(wallBase.offset(dx, dy, 0), stone);
                     }
                 }
 
                 GameProfile profile = new GameProfile(UUID_CREATIVE, "WallCreative");
-                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
-                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+                ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
+                Connection connection = new Connection(PacketFlow.SERVERBOUND);
                 new EmbeddedChannel(connection);
-                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                server.getPlayerList().placeNewPlayer(connection, mock, data);
                 mock.setPos(localPos[0], localPos[1], localPos[2] + 4.0);
-                mock.setYaw(180.0f);
-                mock.setPitch(0.0f);
+                mock.setYRot(180.0f);
+                mock.setXRot(0.0f);
             });
 
             // Passer en Creative via le serveur pour que le HUD et les abilities soient corrects
             // Les mock players ont des UUIDs cafebabe-*, le joueur local a un UUID différent
             sp.getServer().runOnServer(server ->
-                server.getPlayerManager().getPlayerList().stream()
-                    .filter(p -> !p.getUuidAsString().startsWith("cafebabe"))
+                server.getPlayerList().getPlayers().stream()
+                    .filter(p -> !p.getStringUUID().startsWith("cafebabe"))
                     .findFirst()
-                    .ifPresent(p -> p.changeGameMode(GameMode.CREATIVE))
+                    .ifPresent(p -> p.setGameMode(GameType.CREATIVE))
             );
             // Attendre que le mode Creative soit effectivement appliqué côté client
-            context.waitFor(mc -> mc.player.getAbilities().creativeMode);
+            context.waitFor(mc -> mc.player.getAbilities().instabuild);
 
             context.runOnClient(mc -> RpNameClientCache.set(UUID_CREATIVE, "Elara"));
             context.waitTicks(5);
 
-            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
             context.waitTicks(2);
             context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_visible_creative_through_wall")
                 .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
@@ -159,18 +159,18 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 localPos[0] = mc.player.getX();
                 localPos[1] = mc.player.getY();
                 localPos[2] = mc.player.getZ();
-                mc.options.setPerspective(Perspective.FIRST_PERSON);
-                mc.player.setYaw(0.0f);
-                mc.player.setPitch(-20.0f);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.player.setYRot(0.0f);
+                mc.player.setXRot(-20.0f);
             });
 
             sp.getServer().runOnServer(server -> {
-                var world = server.getOverworld();
+                var world = server.overworld();
 
-                world.setTimeOfDay(6000L);
-                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-                world.resetWeather();
+                world.setDayTime(6000L);
+                world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+                world.resetWeatherCycle();
 
                 // Mur de stone entre la caméra et le mock player (z+1), 3 blocs de large, 4 de haut
                 BlockPos wallBase = new BlockPos(
@@ -178,23 +178,23 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                     (int) Math.floor(localPos[1]),
                     (int) Math.floor(localPos[2]) + 1
                 );
-                BlockState stone = Blocks.STONE.getDefaultState();
+                BlockState stone = Blocks.STONE.defaultBlockState();
                 for (int dx = -1; dx <= 1; dx++) {
                     for (int dy = 0; dy <= 3; dy++) {
-                        world.setBlockState(wallBase.add(dx, dy, 0), stone);
+                        world.setBlockAndUpdate(wallBase.offset(dx, dy, 0), stone);
                     }
                 }
 
                 // Mock player derrière le mur à z+4
                 GameProfile profile = new GameProfile(UUID_OCCLUDED, "BehindWall");
-                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
-                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+                ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
+                Connection connection = new Connection(PacketFlow.SERVERBOUND);
                 new EmbeddedChannel(connection);
-                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                server.getPlayerList().placeNewPlayer(connection, mock, data);
                 mock.setPos(localPos[0], localPos[1], localPos[2] + 4.0);
-                mock.setYaw(180.0f);
-                mock.setPitch(0.0f);
+                mock.setYRot(180.0f);
+                mock.setXRot(0.0f);
             });
 
             context.waitTicks(20);
@@ -202,7 +202,7 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
             context.runOnClient(mc -> RpNameClientCache.set(UUID_OCCLUDED, "Elara"));
             context.waitTicks(5);
 
-            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
             context.waitTicks(2);
             context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_occluded_by_wall")
                 .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));

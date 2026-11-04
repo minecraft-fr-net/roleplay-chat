@@ -10,9 +10,8 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
 
 /**
@@ -20,7 +19,7 @@ import net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore;
  * de type entité. Dès que l'utilisateur tape {@code #}, les codes des joueurs
  * en ligne correspondant au préfixe sont proposés.
  */
-@Mixin(EntityArgumentType.class)
+@Mixin(EntityArgument.class)
 public abstract class EntityArgumentTypeHexCodeMixin {
 
     @Inject(
@@ -42,7 +41,7 @@ public abstract class EntityArgumentTypeHexCodeMixin {
             if (!((c >= '0' && c <= '9') || (c >= 'A' && c <= 'F'))) return;
         }
 
-        if (!(context.getSource() instanceof ServerCommandSource source)) return;
+        if (!(context.getSource() instanceof CommandSourceStack source)) return;
         PlayerCodeStore.get(source.getServer()).getAll().forEach((uuid, code) -> {
             if (code.startsWith(partial)) builder.suggest(code);
         });

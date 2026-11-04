@@ -5,17 +5,17 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.rule.GameRules;
+import net.minecraft.client.CameraType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ClientInformation;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
@@ -48,53 +48,53 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 localPos[0] = mc.player.getX();
                 localPos[1] = mc.player.getY();
                 localPos[2] = mc.player.getZ();
-                mc.options.setPerspective(Perspective.FIRST_PERSON);
-                mc.player.setYaw(0.0f);
-                mc.player.setPitch(-20.0f);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.player.setYRot(0.0f);
+                mc.player.setXRot(-20.0f);
             });
 
             sp.getServer().runOnServer(server -> {
-                var world = server.getOverworld();
+                var world = server.overworld();
 
-                world.setTimeOfDay(6000L);
-                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-                world.resetWeather();
+                world.setDayTime(6000L);
+                world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+                world.resetWeatherCycle();
 
                 GameProfile profile = new GameProfile(UUID_CREATIVE, "HoodCreative");
-                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
-                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+                ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
+                Connection connection = new Connection(PacketFlow.SERVERBOUND);
                 new EmbeddedChannel(connection);
-                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                server.getPlayerList().placeNewPlayer(connection, mock, data);
 
                 mock.setPos(localPos[0], localPos[1], localPos[2] + 3.0);
-                mock.setYaw(180.0f);
-                mock.setPitch(0.0f);
+                mock.setYRot(180.0f);
+                mock.setXRot(0.0f);
             });
 
             context.waitTicks(20);
 
             context.runOnClient(mc -> {
-                var mockPlayer = mc.world.getPlayerByUuid(UUID_CREATIVE);
+                var mockPlayer = mc.level.getPlayerByUUID(UUID_CREATIVE);
                 if (mockPlayer != null) {
-                    mockPlayer.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+                    mockPlayer.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
                 }
             });
 
             // Passer en Creative — pattern établi dans NameplateOcclusionDisplayTest
             sp.getServer().runOnServer(server ->
-                server.getPlayerManager().getPlayerList().stream()
-                    .filter(p -> !p.getUuidAsString().startsWith("cafebabe"))
+                server.getPlayerList().getPlayers().stream()
+                    .filter(p -> !p.getStringUUID().startsWith("cafebabe"))
                     .findFirst()
-                    .ifPresent(p -> p.changeGameMode(GameMode.CREATIVE))
+                    .ifPresent(p -> p.setGameMode(GameType.CREATIVE))
             );
-            context.waitFor(mc -> mc.player.getAbilities().creativeMode);
+            context.waitFor(mc -> mc.player.getAbilities().instabuild);
 
             context.runOnClient(mc -> RpNameClientCache.set(UUID_CREATIVE, "Elara"));
             context.waitTicks(5);
 
-            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
             context.waitTicks(2);
             context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_headgear_visible_in_creative")
                 .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));
@@ -110,31 +110,31 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 localPos[0] = mc.player.getX();
                 localPos[1] = mc.player.getY();
                 localPos[2] = mc.player.getZ();
-                mc.options.setPerspective(Perspective.FIRST_PERSON);
-                mc.player.setYaw(0.0f);
-                mc.player.setPitch(-20.0f);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.player.setYRot(0.0f);
+                mc.player.setXRot(-20.0f);
             });
 
             sp.getServer().runOnServer(server -> {
-                var world = server.getOverworld();
+                var world = server.overworld();
 
-                world.setTimeOfDay(6000L);
-                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-                world.resetWeather();
+                world.setDayTime(6000L);
+                world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+                world.resetWeatherCycle();
 
                 GameProfile profile = new GameProfile(UUID_HEADGEAR, "HoodedPlayer");
-                ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-                ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
-                ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+                CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+                ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
+                Connection connection = new Connection(PacketFlow.SERVERBOUND);
                 new EmbeddedChannel(connection);
-                server.getPlayerManager().onPlayerConnect(connection, mock, data);
+                server.getPlayerList().placeNewPlayer(connection, mock, data);
 
                 mock.setPos(localPos[0], localPos[1], localPos[2] + 3.0);
-                mock.setYaw(180.0f);
-                mock.setPitch(0.0f);
+                mock.setYRot(180.0f);
+                mock.setXRot(0.0f);
                 // Équiper un leather_helmet (présent dans le tag conceals_identity)
-                mock.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+                mock.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
             });
 
             context.waitTicks(20);
@@ -142,9 +142,9 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
             // L'équipement du mock player ne se propage pas via EmbeddedChannel —
             // on le force directement sur l'entité côté client
             context.runOnClient(mc -> {
-                var mockPlayer = mc.world.getPlayerByUuid(UUID_HEADGEAR);
+                var mockPlayer = mc.level.getPlayerByUUID(UUID_HEADGEAR);
                 if (mockPlayer != null) {
-                    mockPlayer.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
+                    mockPlayer.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.LEATHER_HELMET));
                 }
             });
 
@@ -156,7 +156,7 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 RpNameRevealedCache.add(UUID_HEADGEAR);
             });
 
-            context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+            context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
             context.waitTicks(2);
             context.assertScreenshotEquals(TestScreenshotComparisonOptions.of("nameplate_hidden_by_headgear")
                 .withAlgorithm(TestScreenshotComparisonAlgorithm.meanSquaredDifference(0.02f)));

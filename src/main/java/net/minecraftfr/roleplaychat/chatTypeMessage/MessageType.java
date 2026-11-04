@@ -1,14 +1,14 @@
 package net.minecraftfr.roleplaychat.chatTypeMessage;
 
-import net.minecraft.network.message.SignedMessage;
-import net.minecraft.network.message.SentMessage;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.OutgoingChatMessage;
+import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.network.chat.TextColor;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class MessageType {
@@ -50,103 +50,103 @@ public abstract class MessageType {
     return character != null && message.startsWith(character);
   }
 
-  public MutableText formatMessage(ServerPlayerEntity player) {
+  public MutableComponent formatMessage(ServerPlayer player) {
     int fadedColor = getFadedColor();
     TextColor textColor = TextColor.fromRgb(fadedColor);
 
     // Segment nom (ex. "<Elara>") avec couleur
-    MutableText nameSegment = Text.literal(getChatName(player))
-        .styled(style -> style.withColor(textColor));
+    MutableComponent nameSegment = Component.literal(getChatName(player))
+        .withStyle(style -> style.withColor(textColor));
 
     // Hover code hexadécimal quand le joueur a un pseudo RP (le code n'est pas visible dans le message)
-    net.minecraft.server.MinecraftServer server = player.getEntityWorld().getServer();
+    net.minecraft.server.MinecraftServer server = player.level().getServer();
     if (server != null) {
       String rpName = net.minecraftfr.roleplaychat.nameplate.RpNameStore
-          .get(server).getRpName(player.getUuid()).orElse(null);
+          .get(server).getRpName(player.getUUID()).orElse(null);
       if (rpName != null) {
         net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore.get(server)
-            .getCode(player.getUuid())
-            .ifPresent(code -> nameSegment.styled(style ->
-                style.withHoverEvent(new net.minecraft.text.HoverEvent.ShowText(
-                    Text.literal(code)))));
+            .getCode(player.getUUID())
+            .ifPresent(code -> nameSegment.withStyle(style ->
+                style.withHoverEvent(new net.minecraft.network.chat.HoverEvent.ShowText(
+                    Component.literal(code)))));
       }
     }
 
     // Segment contenu (ex. " Bonjour à tous !")
-    MutableText contentSegment = Text.literal(" " + contentAfterPrefix())
-        .styled(style -> style.withColor(textColor));
+    MutableComponent contentSegment = Component.literal(" " + contentAfterPrefix())
+        .withStyle(style -> style.withColor(textColor));
 
     return nameSegment.append(contentSegment);
   }
 
-  public String formatContentMessage(ServerPlayerEntity player) {
+  public String formatContentMessage(ServerPlayer player) {
     return getChatName(player) + " " + contentAfterPrefix();
   }
 
   /**
    * Clé du chat type avec décoration pass-through via le champ {@code sender} :
    * {@code parameters: ["sender"], %s} → affiche {@code params.name()} tel quel.
-   * Utilisé avec un {@link SignedMessage} signé → aucun indicateur dans le chat.
+   * Utilisé avec un {@link PlayerChatMessage} signé → aucun indicateur dans le chat.
    * Fallback Profileless si le message n'est pas signé (offline / intégré).
    */
-  private static final RegistryKey<net.minecraft.network.message.MessageType> SIGNED_ROLEPLAY_CHAT_TYPE =
-      RegistryKey.of(RegistryKeys.MESSAGE_TYPE, Identifier.of("roleplay-chat", "signed_roleplay"));
+  private static final ResourceKey<net.minecraft.network.chat.ChatType> SIGNED_ROLEPLAY_CHAT_TYPE =
+      ResourceKey.create(Registries.CHAT_TYPE, Identifier.fromNamespaceAndPath("roleplay-chat", "signed_roleplay"));
 
   /**
-   * Clé du chat type Profileless utilisé quand aucun {@link SignedMessage} n'est
+   * Clé du chat type Profileless utilisé quand aucun {@link PlayerChatMessage} n'est
    * disponible (messages injectés depuis les tests).
    */
-  private static final RegistryKey<net.minecraft.network.message.MessageType> ROLEPLAY_CHAT_TYPE =
-      RegistryKey.of(RegistryKeys.MESSAGE_TYPE, Identifier.of("roleplay-chat", "roleplay"));
+  private static final ResourceKey<net.minecraft.network.chat.ChatType> ROLEPLAY_CHAT_TYPE =
+      ResourceKey.create(Registries.CHAT_TYPE, Identifier.fromNamespaceAndPath("roleplay-chat", "roleplay"));
 
   /**
    * Envoie le message formaté au joueur cible.
    *
-   * <p>Si {@code signedMessage} est non-null, utilise {@link SentMessage#of(SignedMessage)}
+   * <p>Si {@code signedMessage} est non-null, utilise {@link OutgoingChatMessage#create(PlayerChatMessage)}
    * avec le chat type {@code signed_roleplay} (décoration = notre texte pré-formaté via le
-   * champ {@code sender}) : le {@link net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket}
+   * champ {@code sender}) : le {@link net.minecraft.network.protocol.game.ClientboundPlayerChatPacket}
    * résultant porte la signature originale du joueur → zéro indicateur côté client.
    *
    * <p>Si {@code signedMessage} est null (messages synthétiques de tests), bascule
-   * sur un {@link SentMessage.Profileless} avec le chat type {@code roleplay}.
+   * sur un {@link OutgoingChatMessage.Disguised} avec le chat type {@code roleplay}.
    *
    * @param sender        joueur qui envoie le message
    * @param receiver      joueur qui reçoit le message
    * @param signedMessage message signé d'origine, ou {@code null} pour les injections de test
    */
-  public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver,
-                          @Nullable SignedMessage signedMessage) {
-    MutableText formatted = this.formatMessage(sender);
+  public void sendMessage(ServerPlayer sender, ServerPlayer receiver,
+                          @Nullable PlayerChatMessage signedMessage) {
+    MutableComponent formatted = this.formatMessage(sender);
 
     if (signedMessage != null) {
       // withUnsignedContent : le client affiche notre texte coloré (getContent() retourne
       // directement le unsignedContent). La signature originale reste valide (couvre le
       // contenu brut non modifié). Affiche l'indicateur "modified" côté client.
-      SignedMessage modified = signedMessage.withUnsignedContent(formatted);
-      var params = net.minecraft.network.message.MessageType.params(
+      PlayerChatMessage modified = signedMessage.withUnsignedContent(formatted);
+      var params = net.minecraft.network.chat.ChatType.bind(
           ROLEPLAY_CHAT_TYPE,
-          sender.getRegistryManager(),
+          sender.registryAccess(),
           sender.getName()
       );
-      SentMessage.of(modified).send(receiver, false, params);
+      OutgoingChatMessage.create(modified).sendToPlayer(receiver, false, params);
     } else {
       // Pas de message signé disponible (tests) : fallback Profileless
-      var params = net.minecraft.network.message.MessageType.params(
+      var params = net.minecraft.network.chat.ChatType.bind(
           ROLEPLAY_CHAT_TYPE,
-          sender.getRegistryManager(),
+          sender.registryAccess(),
           sender.getName()
       );
-      new SentMessage.Profileless(formatted).send(receiver, false, params);
+      new OutgoingChatMessage.Disguised(formatted).sendToPlayer(receiver, false, params);
     }
   }
 
   /**
-   * Surcharge sans {@link SignedMessage} pour les injections de test (Profileless).
+   * Surcharge sans {@link PlayerChatMessage} pour les injections de test (Profileless).
    *
-   * @deprecated Préférer {@link #sendMessage(ServerPlayerEntity, ServerPlayerEntity, SignedMessage)}
+   * @deprecated Préférer {@link #sendMessage(ServerPlayer, ServerPlayer, PlayerChatMessage)}
    *             en production pour éviter l'indicateur système.
    */
-  public void sendMessage(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
+  public void sendMessage(ServerPlayer sender, ServerPlayer receiver) {
     sendMessage(sender, receiver, null);
   }
 
@@ -155,23 +155,23 @@ public abstract class MessageType {
   }
 
   /** Résout le nom visible du joueur : pseudo RP → code hex → username MC. */
-  protected String getPlayerDisplayName(ServerPlayerEntity player) {
-    net.minecraft.server.MinecraftServer server = player.getEntityWorld().getServer();
+  protected String getPlayerDisplayName(ServerPlayer player) {
+    net.minecraft.server.MinecraftServer server = player.level().getServer();
     if (server != null) {
       java.util.Optional<String> rp =
           net.minecraftfr.roleplaychat.nameplate.RpNameStore.get(server)
-              .getRpName(player.getUuid());
+              .getRpName(player.getUUID());
       if (rp.isPresent()) return rp.get();
       java.util.Optional<String> code =
           net.minecraftfr.roleplaychat.nameplate.PlayerCodeStore.get(server)
-              .getCode(player.getUuid());
+              .getCode(player.getUUID());
       if (code.isPresent()) return code.get();
     }
     return player.getName().getString();
   }
 
   /** Retourne le nom du joueur encadré de chevrons, ex. {@code <Elara>}. */
-  protected String getChatName(ServerPlayerEntity player) {
+  protected String getChatName(ServerPlayer player) {
     return "<" + getPlayerDisplayName(player) + ">";
   }
 

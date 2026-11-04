@@ -2,14 +2,12 @@ package net.minecraftfr.roleplaychat.mixin;
 
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-
+import net.minecraft.commands.arguments.selector.EntitySelectorParser;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.command.EntitySelectorReader;
 
 /**
  * Permet d'utiliser un code {@code #XXXXXX} dans les sélecteurs d'entités
@@ -21,15 +19,15 @@ import net.minecraft.command.EntitySelectorReader;
  * comme si c'était un {@code playerName} ordinaire — la résolution réelle est
  * faite ensuite par {@link PlayerManagerHexCodeMixin}.
  */
-@Mixin(EntitySelectorReader.class)
+@Mixin(EntitySelectorParser.class)
 public abstract class EntitySelectorHexCodeMixin {
 
     @Shadow private StringReader reader;
     @Shadow private String playerName;
-    @Shadow private boolean includesNonPlayers;
-    @Shadow private int limit;
+    @Shadow private boolean includesEntities;
+    @Shadow private int maxResults;
 
-    @Inject(method = "readRegular()V", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "parseNameOrUUID()V", at = @At("HEAD"), cancellable = true)
     private void handleHexCodeInSelector(CallbackInfo ci) throws CommandSyntaxException {
         if (!reader.canRead(7)) return;
         int cursor = reader.getCursor();
@@ -43,8 +41,8 @@ public abstract class EntitySelectorHexCodeMixin {
         if (input.length() > cursor + 7 && StringReader.isAllowedInUnquotedString(input.charAt(cursor + 7))) return;
         reader.setCursor(cursor + 7);
         this.playerName = input.substring(cursor, cursor + 7).toUpperCase();
-        this.includesNonPlayers = false;
-        this.limit = 1;
+        this.includesEntities = false;
+        this.maxResults = 1;
         ci.cancel();
     }
 }

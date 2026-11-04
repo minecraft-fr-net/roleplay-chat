@@ -1,33 +1,32 @@
 package net.minecraftfr.roleplaychat.nameplate;
 
 import java.util.UUID;
-
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 /**
  * Paquet serveur → client diffusé quand un joueur définit (ou change) son pseudo RP.
  * Envoyé aussi en masse au moment de la connexion d'un nouveau joueur pour
  * synchroniser tous les pseudos RP existants.
  */
-public record RpNameUpdatePayload(UUID uuid, String rpName) implements CustomPayload {
+public record RpNameUpdatePayload(UUID uuid, String rpName) implements CustomPacketPayload {
 
-  public static final CustomPayload.Id<RpNameUpdatePayload> ID =
-      new CustomPayload.Id<>(Identifier.of("roleplay-chat", "rp_name_update"));
+  public static final CustomPacketPayload.Type<RpNameUpdatePayload> ID =
+      new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("roleplay-chat", "rp_name_update"));
 
-  public static final PacketCodec<PacketByteBuf, RpNameUpdatePayload> CODEC =
-      PacketCodec.of(
+  public static final StreamCodec<FriendlyByteBuf, RpNameUpdatePayload> CODEC =
+      StreamCodec.ofMember(
           (value, buf) -> {
-            buf.writeUuid(value.uuid());
-            buf.writeString(value.rpName());
+            buf.writeUUID(value.uuid());
+            buf.writeUtf(value.rpName());
           },
-          buf -> new RpNameUpdatePayload(buf.readUuid(), buf.readString())
+          buf -> new RpNameUpdatePayload(buf.readUUID(), buf.readUtf())
       );
 
   @Override
-  public CustomPayload.Id<RpNameUpdatePayload> getId() {
+  public CustomPacketPayload.Type<RpNameUpdatePayload> type() {
     return ID;
   }
 }

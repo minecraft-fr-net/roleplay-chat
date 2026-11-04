@@ -10,11 +10,10 @@ import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
-
-import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateType;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Stockage persistant des codes hexadécimaux anonymes, sauvegardé dans
@@ -24,7 +23,7 @@ import net.minecraft.world.PersistentStateType;
  * à sa première connexion. Ce code remplace le username Minecraft comme
  * identifiant visible des autres joueurs.
  */
-public class PlayerCodeStore extends PersistentState {
+public class PlayerCodeStore extends SavedData {
 
   private static final String DATA_KEY = "roleplay-chat-codes";
   private static final char[] HEX_CHARS = "0123456789ABCDEF".toCharArray();
@@ -51,11 +50,11 @@ public class PlayerCodeStore extends PersistentState {
           store -> store.byUuid
       );
 
-  private static final PersistentStateType<PlayerCodeStore> TYPE =
-      new PersistentStateType<>(DATA_KEY, PlayerCodeStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
+  private static final SavedDataType<PlayerCodeStore> TYPE =
+      new SavedDataType<>(DATA_KEY, PlayerCodeStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
 
   public static PlayerCodeStore get(MinecraftServer server) {
-    return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE);
+    return server.overworld().getDataStorage().computeIfAbsent(TYPE);
   }
 
   // -------------------------------------------------------------------------
@@ -76,7 +75,7 @@ public class PlayerCodeStore extends PersistentState {
 
     byUuid.put(uuid, code);
     byCode.put(code, uuid);
-    markDirty();
+    setDirty();
   }
 
   /**

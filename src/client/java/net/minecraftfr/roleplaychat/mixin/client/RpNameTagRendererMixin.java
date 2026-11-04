@@ -4,23 +4,22 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.PlayerLikeEntity;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import net.minecraft.text.Text;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.player.AvatarRenderer;
+import net.minecraft.client.renderer.entity.state.AvatarRenderState;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.Avatar;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftfr.roleplaychat.nameplate.RpNameTagHelper;
 
 /**
@@ -32,62 +31,62 @@ import net.minecraftfr.roleplaychat.nameplate.RpNameTagHelper;
  *   mais conserve le code hex pour permettre les reports. Même si le joueur s'est déjà présenté,
  *   son identité RP reste masquée tant qu'il porte l'item.
  */
-@Mixin(PlayerEntityRenderer.class)
+@Mixin(AvatarRenderer.class)
 public abstract class RpNameTagRendererMixin {
 
     private static final TagKey<Item> CONCEALS_IDENTITY =
-        TagKey.of(RegistryKeys.ITEM, Identifier.of("roleplay-chat", "conceals_identity"));
+        TagKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath("roleplay-chat", "conceals_identity"));
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectRpPlayerName(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
-        Text hex = RpNameTagHelper.getHexLabel(entity.getUuid());
-        if (hex != null) state.playerName = hex;
+    private void injectRpPlayerName(Avatar entity, AvatarRenderState state, float tickDelta, CallbackInfo ci) {
+        Component hex = RpNameTagHelper.getHexLabel(entity.getUUID());
+        if (hex != null) state.scoreText = hex;
     }
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectLosOcclusion(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.gameRenderer == null || mc.world == null || mc.player == null) return;
+    private void injectLosOcclusion(Avatar entity, AvatarRenderState state, float tickDelta, CallbackInfo ci) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.gameRenderer == null || mc.level == null || mc.player == null) return;
         if (entity == mc.player) return;
-        if (mc.player.getAbilities().creativeMode) return;
+        if (mc.player.getAbilities().instabuild) return;
 
-        Vec3d cameraPos = mc.gameRenderer.getCamera().getCameraPos();
-        Vec3d eyePos = entity.getEyePos();
+        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
+        Vec3 eyePos = entity.getEyePosition();
 
-        BlockHitResult hit = entity.getEntityWorld().raycast(new RaycastContext(
+        BlockHitResult hit = entity.level().clip(new ClipContext(
             cameraPos,
             eyePos,
-            RaycastContext.ShapeType.VISUAL,
-            RaycastContext.FluidHandling.NONE,
+            ClipContext.Block.VISUAL,
+            ClipContext.Fluid.NONE,
             mc.player
         ));
 
         if (hit.getType() == HitResult.Type.BLOCK) {
-            state.displayName = null;
-            state.nameLabelPos = null;
-            state.playerName = null;
+            state.nameTag = null;
+            state.nameTagAttachment = null;
+            state.scoreText = null;
         }
     }
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectHeadgearOcclusion(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
-        MinecraftClient mc = MinecraftClient.getInstance();
-        if (mc.player == null || mc.player.getAbilities().creativeMode) return;
-        ItemStack head = entity.getEquippedStack(EquipmentSlot.HEAD);
-        if (head.isEmpty() || !head.isIn(CONCEALS_IDENTITY)) return;
+    private void injectHeadgearOcclusion(Avatar entity, AvatarRenderState state, float tickDelta, CallbackInfo ci) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.player.getAbilities().instabuild) return;
+        ItemStack head = entity.getItemBySlot(EquipmentSlot.HEAD);
+        if (head.isEmpty() || !head.is(CONCEALS_IDENTITY)) return;
         // Déjà caché par l'occlusion de vue (mur devant) — ne rien afficher du tout.
-        if (state.nameLabelPos == null) return;
+        if (state.nameTagAttachment == null) return;
         // Cache le nom RP (même si déjà présenté) mais conserve le code hex pour les reports.
-        state.displayName = Text.literal("?").styled(s -> s.withColor(Formatting.WHITE));
+        state.nameTag = Component.literal("?").withStyle(s -> s.withColor(ChatFormatting.WHITE));
         // state.playerName conserve le code hex défini par injectRpPlayerName.
     }
 }

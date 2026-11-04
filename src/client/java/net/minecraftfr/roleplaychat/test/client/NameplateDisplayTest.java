@@ -7,13 +7,13 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
-import net.minecraft.client.option.Perspective;
-import net.minecraft.network.ClientConnection;
-import net.minecraft.network.NetworkSide;
-import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
-import net.minecraft.server.network.ConnectedClientData;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.rule.GameRules;
+import net.minecraft.client.CameraType;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.server.level.ClientInformation;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameRevealedCache;
@@ -79,7 +79,7 @@ public class NameplateDisplayTest implements FabricClientGameTest {
 
     private static void takeCleanScreenshot(ClientGameTestContext context, String name) {
         // Vider le chat pour éviter le message "MockPlayer joined the game"
-        context.runOnClient(mc -> mc.inGameHud.getChatHud().clear(false));
+        context.runOnClient(mc -> mc.gui.getChat().clearMessages(false));
         context.waitTicks(2);
         context.assertScreenshotEquals(
             TestScreenshotComparisonOptions.of(name)
@@ -95,31 +95,31 @@ public class NameplateDisplayTest implements FabricClientGameTest {
             localPos[0] = mc.player.getX();
             localPos[1] = mc.player.getY();
             localPos[2] = mc.player.getZ();
-            mc.options.setPerspective(Perspective.FIRST_PERSON);
-            mc.player.setYaw(0.0f);
-            mc.player.setPitch(-20.0f);
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+            mc.player.setYRot(0.0f);
+            mc.player.setXRot(-20.0f);
         });
 
         sp.getServer().runOnServer(server -> {
-            var world = server.getOverworld();
+            var world = server.overworld();
 
-            world.setTimeOfDay(6000L);
-            world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
-            world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
-            world.resetWeather();
+            world.setDayTime(6000L);
+            world.getGameRules().set(GameRules.ADVANCE_TIME, false, server);
+            world.getGameRules().set(GameRules.ADVANCE_WEATHER, false, server);
+            world.resetWeatherCycle();
 
             GameProfile profile = new GameProfile(uuid, name);
-            ConnectedClientData data = ConnectedClientData.createDefault(profile, false);
-            ServerPlayerEntity mock = new ServerPlayerEntity(server, world, profile, SyncedClientOptions.createDefault());
+            CommonListenerCookie data = CommonListenerCookie.createInitial(profile, false);
+            ServerPlayer mock = new ServerPlayer(server, world, profile, ClientInformation.createDefault());
 
-            ClientConnection connection = new ClientConnection(NetworkSide.SERVERBOUND);
+            Connection connection = new Connection(PacketFlow.SERVERBOUND);
             new EmbeddedChannel(connection);
-            server.getPlayerManager().onPlayerConnect(connection, mock, data);
+            server.getPlayerList().placeNewPlayer(connection, mock, data);
 
             // 3 blocs devant le joueur local (direction sud +Z), face à lui
             mock.setPos(localPos[0], localPos[1], localPos[2] + 3.0);
-            mock.setYaw(180.0f);
-            mock.setPitch(0.0f);
+            mock.setYRot(180.0f);
+            mock.setXRot(0.0f);
         });
 
         context.waitTicks(20);

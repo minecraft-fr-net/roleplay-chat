@@ -6,8 +6,8 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.command.RoleplayChatCommands;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
 import net.minecraftfr.roleplaychat.nameplate.OpenRpNameScreenPayload;
@@ -43,7 +43,7 @@ public class RoleplayChat implements ModInitializer {
     // Traiter la saisie du pseudo RP depuis l'écran de connexion
     ServerPlayNetworking.registerGlobalReceiver(RpNameInputPayload.ID, (payload, ctx) -> {
       String name = payload.name().trim();
-      ServerPlayerEntity player = ctx.player();
+      ServerPlayer player = ctx.player();
       RpNameStore store = RpNameStore.get(ctx.server());
 
       if (name.isEmpty()) {
@@ -54,21 +54,21 @@ public class RoleplayChat implements ModInitializer {
         ServerPlayNetworking.send(player, new OpenRpNameScreenPayload("screen.roleplay-chat.rp_name_input.error.too_long", ""));
         return;
       }
-      if (store.isNameTaken(name, player.getUuid())) {
+      if (store.isNameTaken(name, player.getUUID())) {
         ServerPlayNetworking.send(player, new OpenRpNameScreenPayload("screen.roleplay-chat.rp_name_input.error.taken", name));
         return;
       }
 
-      store.setRpName(player.getUuid(), name);
-      RpNameUpdatePayload rpPayload = new RpNameUpdatePayload(player.getUuid(), name);
-      ctx.server().getPlayerManager().getPlayerList().forEach(p ->
+      store.setRpName(player.getUUID(), name);
+      RpNameUpdatePayload rpPayload = new RpNameUpdatePayload(player.getUUID(), name);
+      ctx.server().getPlayerList().getPlayers().forEach(p ->
           ServerPlayNetworking.send(p, rpPayload));
-      ctx.server().getPlayerManager().sendToAll(
-          new PlayerListS2CPacket(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME, player));
+      ctx.server().getPlayerList().broadcastAll(
+          new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME, player));
     });
 
     ServerMessageEvents.ALLOW_CHAT_MESSAGE.register((message, sender, typeKey) -> {
-      return chatManager.handleChatMessage(sender, message.getContent().getString(), message);
+      return chatManager.handleChatMessage(sender, message.decoratedContent().getString(), message);
     });
 
     CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -84,17 +84,17 @@ public class RoleplayChat implements ModInitializer {
 
       // Synchroniser les présentations déjà faites (quels UUID ce joueur peut voir)
       RpNameVisibilityStore visibilityStore = RpNameVisibilityStore.get(server);
-      visibilityStore.getVisibleFor(handler.player.getUuid()).forEach(presenterUuid ->
+      visibilityStore.getVisibleFor(handler.player.getUUID()).forEach(presenterUuid ->
           ServerPlayNetworking.send(handler.player, new RpNameRevealPayload(presenterUuid)));
 
       // Assigner un code hexadécimal unique à la première connexion
       PlayerCodeStore codeStore = PlayerCodeStore.get(server);
-      if (codeStore.getCode(handler.player.getUuid()).isEmpty()) {
+      if (codeStore.getCode(handler.player.getUUID()).isEmpty()) {
         String code = codeStore.generateUniqueCode();
-        codeStore.setCode(handler.player.getUuid(), code);
+        codeStore.setCode(handler.player.getUUID(), code);
         // Diffuser le nouveau code à tous les joueurs connectés (y compris le nouveau)
-        PlayerCodeUpdatePayload newCodePayload = new PlayerCodeUpdatePayload(handler.player.getUuid(), code);
-        server.getPlayerManager().getPlayerList().forEach(p ->
+        PlayerCodeUpdatePayload newCodePayload = new PlayerCodeUpdatePayload(handler.player.getUUID(), code);
+        server.getPlayerList().getPlayers().forEach(p ->
             ServerPlayNetworking.send(p, newCodePayload));
       }
 
@@ -103,7 +103,7 @@ public class RoleplayChat implements ModInitializer {
           ServerPlayNetworking.send(handler.player, new PlayerCodeUpdatePayload(uuid, code)));
 
       // Ouvrir l'écran de saisie si le joueur n'a pas encore de pseudo RP
-      if (rpStore.getRpName(handler.player.getUuid()).isEmpty()) {
+      if (rpStore.getRpName(handler.player.getUUID()).isEmpty()) {
         ServerPlayNetworking.send(handler.player, new OpenRpNameScreenPayload("", ""));
       }
     });

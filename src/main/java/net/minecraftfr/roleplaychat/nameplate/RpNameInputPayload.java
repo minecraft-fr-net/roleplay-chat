@@ -1,26 +1,26 @@
 package net.minecraftfr.roleplaychat.nameplate;
 
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 
 /**
  * Paquet client → serveur transportant le pseudo RP saisi dans l'écran de connexion.
  */
-public record RpNameInputPayload(String name) implements CustomPayload {
+public record RpNameInputPayload(String name) implements CustomPacketPayload {
 
-  public static final CustomPayload.Id<RpNameInputPayload> ID =
-      new CustomPayload.Id<>(Identifier.of("roleplay-chat", "rp_name_input"));
+  public static final CustomPacketPayload.Type<RpNameInputPayload> ID =
+      new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("roleplay-chat", "rp_name_input"));
 
-  public static final PacketCodec<PacketByteBuf, RpNameInputPayload> CODEC =
-      PacketCodec.of(
-          (value, buf) -> buf.writeString(value.name()),
-          buf -> new RpNameInputPayload(buf.readString())
+  public static final StreamCodec<FriendlyByteBuf, RpNameInputPayload> CODEC =
+      StreamCodec.ofMember(
+          (value, buf) -> buf.writeUtf(value.name()),
+          buf -> new RpNameInputPayload(buf.readUtf())
       );
 
   @Override
-  public CustomPayload.Id<RpNameInputPayload> getId() {
+  public CustomPacketPayload.Type<RpNameInputPayload> type() {
     return ID;
   }
 }

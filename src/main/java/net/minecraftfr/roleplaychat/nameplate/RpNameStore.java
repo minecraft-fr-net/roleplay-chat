@@ -6,19 +6,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import com.mojang.serialization.Codec;
-
-import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateType;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * Stockage persistant des pseudos RP, sauvegardé dans
  * {@code <world>/data/roleplay-chat-rpnames.dat} (NBT).
  *
- * <p>Chargé/sauvegardé automatiquement par Minecraft via {@link net.minecraft.world.PersistentStateManager}.
+ * <p>Chargé/sauvegardé automatiquement par Minecraft via {@link net.minecraft.world.level.storage.DimensionDataStorage}.
  */
-public class RpNameStore extends PersistentState {
+public class RpNameStore extends SavedData {
 
   private static final String DATA_KEY = "roleplay-chat-rpnames";
 
@@ -44,11 +43,11 @@ public class RpNameStore extends PersistentState {
           store -> store.byUuid
       );
 
-  private static final PersistentStateType<RpNameStore> TYPE =
-      new PersistentStateType<>(DATA_KEY, RpNameStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
+  private static final SavedDataType<RpNameStore> TYPE =
+      new SavedDataType<>(DATA_KEY, RpNameStore::new, CODEC, DataFixTypes.SAVED_DATA_SCOREBOARD);
 
   public static RpNameStore get(MinecraftServer server) {
-    return server.getOverworld().getPersistentStateManager().getOrCreate(TYPE);
+    return server.overworld().getDataStorage().computeIfAbsent(TYPE);
   }
 
   // -------------------------------------------------------------------------
@@ -76,7 +75,7 @@ public class RpNameStore extends PersistentState {
 
     byUuid.put(uuid, rpName);
     byRpName.put(rpName.toLowerCase(), uuid);
-    markDirty();
+    setDirty();
   }
 
   /** Retourne une vue non-modifiable de tous les pseudos RP (UUID → rpName). */

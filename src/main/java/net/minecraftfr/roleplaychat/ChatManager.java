@@ -4,10 +4,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.joml.Math;
-
-import net.minecraft.network.message.SignedMessage;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftfr.roleplaychat.chatTypeMessage.ActionMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.GlobalOOCMessage;
 import net.minecraftfr.roleplaychat.chatTypeMessage.MessageType;
@@ -18,7 +17,7 @@ import net.minecraftfr.roleplaychat.chatTypeMessage.WhisperMessage;
 import net.minecraftfr.roleplaychat.config.RoleplayChatConfig;
 
 public class ChatManager {
-  public boolean handleChatMessage(ServerPlayerEntity player, String message, SignedMessage signedMessage) {
+  public boolean handleChatMessage(ServerPlayer player, String message, PlayerChatMessage signedMessage) {
     RoleplayChatConfig cfg = RoleplayChatConfig.get();
     List<MessageType> messageTypes = Arrays.asList(
       new ShoutMessage(message, cfg.shout()),
@@ -45,17 +44,17 @@ public class ChatManager {
    * Send message to players within a certain radius in the specified color
    * Send to all players if radius is 0
    */
-  private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType, SignedMessage signedMessage) {
+  private void sendLocalMessage(ServerPlayer player, MessageType messageType, PlayerChatMessage signedMessage) {
     sendMessageToPlayerListFromPosition(
       player,
-      ((ServerWorld) player.getEntityWorld()).getPlayers(p -> true),
+      ((ServerLevel) player.level()).getPlayers(p -> true),
       messageType,
       signedMessage
     );
   }
 
-  public static void sendMessageToPlayerListFromPosition(ServerPlayerEntity sender, List<ServerPlayerEntity> players,
-                                                         MessageType messageType, SignedMessage signedMessage) {
+  public static void sendMessageToPlayerListFromPosition(ServerPlayer sender, List<ServerPlayer> players,
+                                                         MessageType messageType, PlayerChatMessage signedMessage) {
     int radius = messageType.getRadius();
 
     players.forEach(otherPlayer -> {

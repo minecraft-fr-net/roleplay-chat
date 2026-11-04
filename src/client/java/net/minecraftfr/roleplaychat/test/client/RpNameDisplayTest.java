@@ -5,8 +5,8 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.Perspective;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.CameraType;
 
 /**
  * Test visuel du système de pseudo RP (/rpname) :
@@ -27,25 +27,25 @@ public class RpNameDisplayTest implements FabricClientGameTest {
             sp.getClientWorld().waitForChunksDownload();
             sp.getClientWorld().waitForChunksRender();
 
-            context.runOnClient((MinecraftClient client) ->
-                client.options.setPerspective(Perspective.FIRST_PERSON)
+            context.runOnClient((Minecraft client) ->
+                client.options.setCameraType(CameraType.FIRST_PERSON)
             );
             context.waitTicks(20);
 
             // Définir le pseudo RP via commande envoyée par le joueur client
             context.runOnClient(client -> {
-                var handler = client.getNetworkHandler();
+                var handler = client.getConnection();
                 if (handler != null) {
-                    handler.sendChatCommand("rpname Elara");
+                    handler.sendCommand("rpname Elara");
                 }
             });
             context.waitTicks(20);
 
             // Envoyer un message : doit afficher "<Elara> Bonjour à tous !"
             context.runOnClient(client -> {
-                var handler = client.getNetworkHandler();
+                var handler = client.getConnection();
                 if (handler != null) {
-                    handler.sendChatMessage("Bonjour à tous !");
+                    handler.sendChat("Bonjour à tous !");
                 }
             });
             context.waitTicks(20);

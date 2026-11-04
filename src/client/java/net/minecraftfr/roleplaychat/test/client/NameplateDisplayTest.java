@@ -13,7 +13,7 @@ import net.minecraft.network.NetworkSide;
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
 import net.minecraftfr.roleplaychat.nameplate.RpNameRevealedCache;
@@ -104,8 +104,8 @@ public class NameplateDisplayTest implements FabricClientGameTest {
             var world = server.getOverworld();
 
             world.setTimeOfDay(6000L);
-            server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-            server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+            world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+            world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
             world.resetWeather();
 
             GameProfile profile = new GameProfile(uuid, name);

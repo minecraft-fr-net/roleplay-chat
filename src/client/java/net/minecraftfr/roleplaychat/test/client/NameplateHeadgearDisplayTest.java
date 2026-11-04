@@ -15,7 +15,7 @@ import net.minecraft.network.packet.c2s.common.SyncedClientOptions;
 import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.PlayerCodeClientCache;
@@ -57,8 +57,8 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 var world = server.getOverworld();
 
                 world.setTimeOfDay(6000L);
-                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
                 world.resetWeather();
 
                 GameProfile profile = new GameProfile(UUID_CREATIVE, "HoodCreative");
@@ -119,8 +119,8 @@ public class NameplateHeadgearDisplayTest implements FabricClientGameTest {
                 var world = server.getOverworld();
 
                 world.setTimeOfDay(6000L);
-                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
                 world.resetWeather();
 
                 GameProfile profile = new GameProfile(UUID_HEADGEAR, "HoodedPlayer");

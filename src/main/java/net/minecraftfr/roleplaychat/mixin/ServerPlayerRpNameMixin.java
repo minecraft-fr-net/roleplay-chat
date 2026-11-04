@@ -23,15 +23,15 @@ public abstract class ServerPlayerRpNameMixin {
   @Inject(method = "getPlayerListName", at = @At("RETURN"), cancellable = true)
   private void injectRpListName(CallbackInfoReturnable<Text> cir) {
     ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
-    if (self.getServer() == null) return;
+    if (self.getEntityWorld().getServer() == null) return;
 
-    String rpName = RpNameStore.get(self.getServer()).getRpName(self.getUuid()).orElse(null);
+    String rpName = RpNameStore.get(self.getEntityWorld().getServer()).getRpName(self.getUuid()).orElse(null);
     if (rpName != null) {
       cir.setReturnValue(Text.literal(rpName));
       return;
     }
 
-    PlayerCodeStore.get(self.getServer()).getCode(self.getUuid())
+    PlayerCodeStore.get(self.getEntityWorld().getServer()).getCode(self.getUuid())
         .ifPresent(code -> cir.setReturnValue(Text.literal(code)));
   }
 }

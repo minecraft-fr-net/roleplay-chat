@@ -59,7 +59,7 @@ public abstract class MessageType {
         .styled(style -> style.withColor(textColor));
 
     // Hover code hexadécimal quand le joueur a un pseudo RP (le code n'est pas visible dans le message)
-    net.minecraft.server.MinecraftServer server = player.getServer();
+    net.minecraft.server.MinecraftServer server = player.getEntityWorld().getServer();
     if (server != null) {
       String rpName = net.minecraftfr.roleplaychat.nameplate.RpNameStore
           .get(server).getRpName(player.getUuid()).orElse(null);
@@ -156,7 +156,7 @@ public abstract class MessageType {
 
   /** Résout le nom visible du joueur : pseudo RP → code hex → username MC. */
   protected String getPlayerDisplayName(ServerPlayerEntity player) {
-    net.minecraft.server.MinecraftServer server = player.getServer();
+    net.minecraft.server.MinecraftServer server = player.getEntityWorld().getServer();
     if (server != null) {
       java.util.Optional<String> rp =
           net.minecraftfr.roleplaychat.nameplate.RpNameStore.get(server)

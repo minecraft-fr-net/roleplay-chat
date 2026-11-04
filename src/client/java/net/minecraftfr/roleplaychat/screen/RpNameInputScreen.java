@@ -39,42 +39,33 @@ public class RpNameInputScreen extends Screen {
     }
   }
 
+  /** TextWidget ne gère plus l'alignement depuis 1.21.11 : on le dimensionne au texte et on le centre. */
+  private TextWidget centeredText(Text text, int color, int centerX, int y) {
+    Text colored = text.copy().withColor(color);
+    int width = this.textRenderer.getWidth(colored);
+    return new TextWidget(centerX - width / 2, y, width, 9, colored, this.textRenderer);
+  }
+
   @Override
   protected void init() {
     int centerX = this.width / 2;
     int centerY = this.height / 2;
 
     // Titre centré
-    TextWidget titleWidget = new TextWidget(
-        centerX - FIELD_WIDTH / 2, centerY - 40,
-        FIELD_WIDTH, 9,
-        this.title, this.textRenderer
-    );
-    titleWidget.alignCenter();
-    titleWidget.setTextColor(0xFFFFFF);
-    this.addDrawableChild(titleWidget);
+    this.addDrawableChild(centeredText(this.title, 0xFFFFFF, centerX, centerY - 40));
 
     // Label "Pseudo RP" / "RP Name"
-    TextWidget labelWidget = new TextWidget(
+    this.addDrawableChild(new TextWidget(
         centerX - FIELD_WIDTH / 2, centerY - 13,
         FIELD_WIDTH, 9,
-        Text.translatable("screen.roleplay-chat.rp_name_input.label"),
+        Text.translatable("screen.roleplay-chat.rp_name_input.label").copy().withColor(0xAAAAAA),
         this.textRenderer
-    );
-    labelWidget.alignLeft();
-    labelWidget.setTextColor(0xAAAAAA);
-    this.addDrawableChild(labelWidget);
+    ));
 
     // Message d'erreur éventuel
     if (errorText != null) {
-      TextWidget errorWidget = new TextWidget(
-          centerX - FIELD_WIDTH / 2, centerY + FIELD_HEIGHT + 8 + BUTTON_HEIGHT + 6,
-          FIELD_WIDTH, 9,
-          errorText, this.textRenderer
-      );
-      errorWidget.alignCenter();
-      errorWidget.setTextColor(0xFF5555);
-      this.addDrawableChild(errorWidget);
+      this.addDrawableChild(centeredText(
+          errorText, 0xFF5555, centerX, centerY + FIELD_HEIGHT + 8 + BUTTON_HEIGHT + 6));
     }
 
     // Champ de saisie
@@ -122,7 +113,8 @@ public class RpNameInputScreen extends Screen {
   }
 
   @Override
-  public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+  public boolean keyPressed(net.minecraft.client.input.KeyInput input) {
+    int keyCode = input.key();
     if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
       if (this.client != null) this.client.setScreen(new GameMenuScreen(true));
       return true;
@@ -131,7 +123,7 @@ public class RpNameInputScreen extends Screen {
       submit();
       return true;
     }
-    return super.keyPressed(keyCode, scanCode, modifiers);
+    return super.keyPressed(input);
   }
 
   @Override

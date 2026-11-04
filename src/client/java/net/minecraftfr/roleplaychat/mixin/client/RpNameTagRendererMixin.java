@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.entity.PlayerLikeEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.entity.EquipmentSlot;
@@ -39,28 +39,28 @@ public abstract class RpNameTagRendererMixin {
         TagKey.of(RegistryKeys.ITEM, Identifier.of("roleplay-chat", "conceals_identity"));
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectRpPlayerName(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+    private void injectRpPlayerName(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
         Text hex = RpNameTagHelper.getHexLabel(entity.getUuid());
         if (hex != null) state.playerName = hex;
     }
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectLosOcclusion(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+    private void injectLosOcclusion(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.gameRenderer == null || mc.world == null || mc.player == null) return;
         if (entity == mc.player) return;
         if (mc.player.getAbilities().creativeMode) return;
 
-        Vec3d cameraPos = mc.gameRenderer.getCamera().getPos();
+        Vec3d cameraPos = mc.gameRenderer.getCamera().getCameraPos();
         Vec3d eyePos = entity.getEyePos();
 
-        BlockHitResult hit = entity.clientWorld.raycast(new RaycastContext(
+        BlockHitResult hit = entity.getEntityWorld().raycast(new RaycastContext(
             cameraPos,
             eyePos,
             RaycastContext.ShapeType.VISUAL,
@@ -76,10 +76,10 @@ public abstract class RpNameTagRendererMixin {
     }
 
     @Inject(
-        method = "updateRenderState(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
+        method = "updateRenderState(Lnet/minecraft/entity/PlayerLikeEntity;Lnet/minecraft/client/render/entity/state/PlayerEntityRenderState;F)V",
         at = @At("RETURN")
     )
-    private void injectHeadgearOcclusion(AbstractClientPlayerEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
+    private void injectHeadgearOcclusion(PlayerLikeEntity entity, PlayerEntityRenderState state, float tickDelta, CallbackInfo ci) {
         MinecraftClient mc = MinecraftClient.getInstance();
         if (mc.player == null || mc.player.getAbilities().creativeMode) return;
         ItemStack head = entity.getEquippedStack(EquipmentSlot.HEAD);

@@ -36,7 +36,7 @@ public class RoleplayChatCommands {
     registerRpPresentCommand(dispatcher);
 
     dispatcher.register(CommandManager.literal("roleplaychat")
-      .requires(CommandManager.requirePermissionLevel(4))
+      .requires(CommandManager.requirePermissionLevel(CommandManager.OWNERS_CHECK))
       .then(CommandManager.literal("reload")
         .executes(context -> {
           if (RoleplayChatConfig.reload()) {

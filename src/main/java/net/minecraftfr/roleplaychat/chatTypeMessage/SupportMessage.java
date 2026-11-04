@@ -23,7 +23,7 @@ public class SupportMessage extends MessageType {
    * only if the receiver is OP (admin) or if the sender is the receiver
    */
   public boolean canReceive(ServerPlayerEntity sender, ServerPlayerEntity receiver) {
-    return receiver.hasPermissionLevel(2)
+    return receiver.getPermissions().hasPermission(new net.minecraft.command.permission.Permission.Level(net.minecraft.command.permission.PermissionLevel.GAMEMASTERS))
       || sender.getUuid().equals(receiver.getUuid());
   }
 }

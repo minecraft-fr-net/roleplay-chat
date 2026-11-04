@@ -57,7 +57,8 @@ public abstract class GameProfileHexCodeMixin {
       return;
     }
 
-    java.util.Optional<GameProfile> cached = server.getUserCache().getByUuid(targetUuid);
+    java.util.Optional<GameProfile> cached = server.getApiServices().nameToIdCache().getByUuid(targetUuid)
+      .map(entry -> new GameProfile(entry.id(), entry.name()));
     if (cached.isPresent()) {
       cir.setReturnValue(Collections.singleton(cached.get()));
       return;

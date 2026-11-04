@@ -48,7 +48,7 @@ public class ChatManager {
   private void sendLocalMessage(ServerPlayerEntity player, MessageType messageType, SignedMessage signedMessage) {
     sendMessageToPlayerListFromPosition(
       player,
-      ((ServerWorld) player.getWorld()).getPlayers(p -> true),
+      ((ServerWorld) player.getEntityWorld()).getPlayers(p -> true),
       messageType,
       signedMessage
     );

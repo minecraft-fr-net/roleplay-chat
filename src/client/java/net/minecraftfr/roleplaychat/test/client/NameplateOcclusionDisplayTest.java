@@ -15,7 +15,7 @@ import net.minecraft.server.network.ConnectedClientData;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonAlgorithm;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotComparisonOptions;
 import net.minecraftfr.roleplaychat.nameplate.RpNameClientCache;
@@ -57,8 +57,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 var world = server.getOverworld();
 
                 world.setTimeOfDay(6000L);
-                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
                 world.resetWeather();
 
                 GameProfile profile = new GameProfile(UUID_NO_WALL, "Visible");
@@ -101,8 +101,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 var world = server.getOverworld();
 
                 world.setTimeOfDay(6000L);
-                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
                 world.resetWeather();
 
                 // Même mur que le test d'occlusion
@@ -168,8 +168,8 @@ public class NameplateOcclusionDisplayTest implements FabricClientGameTest {
                 var world = server.getOverworld();
 
                 world.setTimeOfDay(6000L);
-                server.getGameRules().get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-                server.getGameRules().get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+                world.getGameRules().setValue(GameRules.ADVANCE_WEATHER, false, server);
                 world.resetWeather();
 
                 // Mur de stone entre la caméra et le mock player (z+1), 3 blocs de large, 4 de haut
